@@ -3,7 +3,7 @@ var BOT_CLASS = {
     'running': 'success',
     'stopping': 'danger',
     'stopped': 'danger'
-}
+};
 
 var bot_status = {};
 
@@ -22,18 +22,19 @@ window.onresize = function () {
     $('#bot-table').dataTable().fnDraw();
 };
 
-function update_bot_status() {
+function update_bot_status(data)
+{
+
+    bot_status = data;
+
     var botnet_status = 'stopped';
     var full_run = true;
     
     var botnet_status_element = document.getElementById('botnet-status');
-    var botnet_buttons_element = document.getElementById('botnet-buttons');
-    var bot_table_element = document.getElementById('bot-table-body');
-    
+
     $('#bot-table').dataTable().fnClearTable();
     
     for (bot_id in bot_status) {
-        var bot_class = 'bg-danger';
         if (bot_status[bot_id].indexOf('stop') != -1) {
             full_run = false;
         } else {
@@ -41,8 +42,9 @@ function update_bot_status() {
         }
         
         buttons_cell = '' +
-            '<button type="submit" class="btn btn-default" onclick="start_bot(\'' + bot_id + '\')"><span class="glyphicon glyphicon-play"></span></button>' + 
-            '<button type="submit" class="btn btn-default" onclick="stop_bot(\'' + bot_id + '\')"><span class="glyphicon glyphicon-stop"></span></button>';
+            '<button type="submit" class="btn btn-xs btn-default bot_list_start" data-bot-id="'+bot_id+'"><span class="fa fa-fw fa-play"></span></button>&nbsp;' +
+            '<button type="submit" class="btn btn-xs btn-default bot_list_stop" data-bot-id="'+bot_id+'"><span class="fa fa-fw fa-square"></span></button>&nbsp;' +
+            '<button type="submit" class="btn btn-xs btn-default bot_list_forcestop" data-bot-id="'+bot_id+'"><span class="fa fa-fw fa-bomb"></span></button>';
 
         bot_row = {
             'bot_id': bot_id,
@@ -53,80 +55,138 @@ function update_bot_status() {
 
         $('#bot-table').dataTable().fnAddData(bot_row);
     }
-    
+
+    $('#bot-table .bot_list_start').click(function(e){
+        $('#botnet-status-panel-title').addClass('waiting');
+        bot_id=$(this).data('bot-id');
+        start_bot(
+            get_selected_agent(),
+            bot_id,
+            function(status){
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            },
+            function(error){
+                show_error(error);
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            }
+        );
+        e.preventDefault();
+        return false;
+    });
+
+    $('#bot-table .bot_list_stop').click(function(e){
+        $('#botnet-status-panel-title').addClass('waiting');
+        bot_id=$(this).data('bot-id');
+        stop_bot(
+            get_selected_agent(),
+            bot_id,
+            function(status){
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            },
+            function(error){
+                show_error(error);
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            }
+        );
+        e.preventDefault();
+        return false;
+    });
+
+    $('#bot-table .bot_list_forcestop').click(function(e){
+        $('#botnet-status-panel-title').addClass('waiting');
+        bot_id=$(this).data('bot-id');
+        forcestop_bot(
+            get_selected_agent(),
+            bot_id,
+            function(status){
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            },
+            function(error){
+                show_error(error);
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            }
+        );
+        e.preventDefault();
+        return false;
+    });
+
     botnet_status_element.setAttribute('class', 'bg-' + BOT_CLASS[botnet_status]);
     botnet_status_element.innerHTML = botnet_status;
-    
-    botnet_buttons_element.innerHTML = '' +
-        '<button type="submit" class="btn btn-default" onclick="start_botnet()"><span class="glyphicon glyphicon-play"></span></button>' + 
-        '<button type="submit" class="btn btn-default" onclick="stop_botnet()"><span class="glyphicon glyphicon-stop"></span></button>';
-    
+
     $('#botnet-status-panel-title').removeClass('waiting');
     
-    $('#log-table').dataTable().fnAdjustColumnSizing();
+    //$('#log-table').dataTable().fnAdjustColumnSizing();
     $('#bot-table').dataTable().fnDraw();
     
 }
 
-function get_botnet_status() {
-    $('#botnet-status-panel-title').addClass('waiting');
-    $.getJSON(MANAGEMENT_SCRIPT + '?scope=botnet&action=status')
-        .done(function (data) {
-            bot_status = data;
-            update_bot_status();
-        })
-        .fail(function (err1, err2, errMessage) {
-            show_error('Error loading botnet status: ' + errMessage);
-        });
-}
-    
-    
-function start_bot(bot_id) {
-    $('#botnet-status-panel-title').addClass('waiting');
-    $.getJSON(MANAGEMENT_SCRIPT + '?scope=bot&action=start&id=' + bot_id)
-        .done(function (status) {
-            bot_status[bot_id] = status;
-            update_bot_status();
-        })
-        .fail(function (err1, err2, errMessage) {
-            show_error('Error starting bot: ' + errMessage);
-        });
-}
+// Things to do on document ready
 
-function stop_bot(bot_id) {
-    $('#botnet-status-panel-title').addClass('waiting');
-    $.getJSON(MANAGEMENT_SCRIPT + '?scope=bot&action=stop&id=' + bot_id)
-        .done(function (status) {
-            bot_status[bot_id] = status;
-            update_bot_status();
-        })
-        .fail(function (err1, err2, errMessage) {
-            show_error('Error stopping bot: ' + errMessage);
-        });
-}
+$(document).ready(function() {
 
-function start_botnet() {
-    $('#botnet-status-panel-title').addClass('waiting');
-    $.getJSON(MANAGEMENT_SCRIPT + '?scope=botnet&action=start')
-        .done(function (status) {
-            bot_status = status;
-            update_bot_status();
-        })
-        .fail(function (err1, err2, err3) {
-            show_error('Error starting botnet: ' + errMessage);
-        });
-}
+    get_main_configs(
+        function()
+        {
+            // Everything should be done only after the main configs are successfully retrieved
 
-function stop_botnet() {
-    $('#botnet-status-panel-title').addClass('waiting');
-    $.getJSON(MANAGEMENT_SCRIPT + '?scope=botnet&action=stop')
-        .done(function (status) {
-            bot_status = status;
-            update_bot_status();
-        })
-        .fail(function (err1, err2, err3) {
-            show_error('Error stopping botnet: ' + errMessage);
-        });    
-}
+            $('#bot-table').dataTable();
+            $('#botnet-status-panel-title').addClass('waiting');
+            get_botnet_status(get_selected_agent(), update_bot_status, show_error);
 
-get_botnet_status();
+            // handle start and stop botnet buttons
+            $('#start_botnet').click(function(e){
+                $('#botnet-status-panel-title').addClass('waiting');
+                start_botnet(
+                    get_selected_agent(),
+                    function(status){
+
+                        get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+                    },
+                    function(error){
+
+                        show_error(error);
+                        get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+                    }
+                );
+                e.preventDefault();
+                return false;
+            });
+
+            $('#stop_botnet').click(function(e){
+                $('#botnet-status-panel-title').addClass('waiting');
+                stop_botnet(
+                    get_selected_agent(),
+                    function(status){
+                        get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+                    },
+                    function(error){
+                        show_error(error);
+                        get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+                    }
+                );
+                e.preventDefault();
+                return false;
+            });
+
+            // update agent list dropdown if (USE_AGENTS)
+            if (USE_AGENTS)
+            {
+                get_agents(
+                    function(data) {
+                        update_agent_selector(data);
+                    },
+                    function(error){
+                        show_error(error);
+                    }
+                );
+            }
+            else
+            {
+                $('#agent_selector_div').hide();
+            }
+
+        },
+        show_error
+    );
+
+});

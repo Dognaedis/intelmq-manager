@@ -28,7 +28,7 @@ function resize_handler() {
     topOffset = 50;
     width = window_width;
     if (width < 768) {
-        $('div.navbar-collapse').addClass('collapse')
+        $('div.navbar-collapse').addClass('collapse');;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         topOffset = 100; // 2-row-menu
     } else {
         $('div.navbar-collapse').removeClass('collapse')

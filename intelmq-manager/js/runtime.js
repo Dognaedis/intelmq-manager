@@ -1,5 +1,4 @@
 function generate_runtime_conf(nodes) {
-    var conf_string = '';
     var save_keys = {};
 
     for (id in nodes) {
@@ -19,10 +18,12 @@ function generate_runtime_conf(nodes) {
     return JSON.stringify(save_keys, undefined, 4);
 }
 
-function read_runtime_conf(config) {
+function read_runtime_conf(config_contents) {
+
     var nodes = {};
-    for (id in config) {
-        var bot = config[id];
+    for (id in config_contents) {
+
+        var bot = config_contents[id];
         nodes[id] = bot['parameters'];
 
         nodes[id]['id'] = id;

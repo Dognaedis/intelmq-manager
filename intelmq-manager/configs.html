@@ -17,14 +17,18 @@
     <!-- MetisMenu CSS -->
     <link href="plugins/metisMenu/metisMenu.min.css" rel="stylesheet">
 
-    <!-- Vis.JS Plugin JavaScript -->
-    <link href="plugins/vis.js/vis.css" rel="stylesheet" type="text/css">
+    <!-- Vis.JS Plugin CSS -->
+    <link href="plugins/vis.js/vis-intelmq.css" rel="stylesheet" type="text/css">
 
     <!-- Custom Fonts -->
     <link href="plugins/font-awesome-4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
     <!-- Custom CSS -->
     <link href="css/sb-admin-2.css" rel="stylesheet">
+
+    <!-- Jquery Confirm CSS -->
+    <link href="plugins/jquery-confirm/jquery-confirm.min.css" rel="stylesheet">
+
 
     <link rel="icon" type="image/png" href="images/logo2.png">
 
@@ -56,6 +60,11 @@
 
             <ul class="nav navbar-top-links navbar-left">
                 <li>
+                    <a href="agents.html">
+                        <span class="top-menu-text"><img src="./images/agents.png" width="24px" height="24px">&nbsp;Agents</span>
+                    </a>
+                </li>
+                <li>
                     <a href="configs.html#load">
                         <span class="top-menu-text"><img src="./images/config.png" width="24px" height="24px">&nbsp;Configuration</span>
                     </a>
@@ -63,6 +72,11 @@
                 <li>
                     <a href="management.html">
                         <span class="top-menu-text"><img src="./images/botnet.png" width="24px" height="24px">&nbsp;Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="status.html">
+                        <span class="top-menu-text"><img src="./images/status.png" width="24px" height="24px">&nbsp;Status</span>
                     </a>
                 </li>
                 <li>
@@ -75,6 +89,7 @@
                         <span class="top-menu-text"><img src="./images/about.png" width="24px" height="24px">&nbsp;About</span>
                     </a>
                 </li>
+
             </ul>
             <!-- Future feature
             <ul class="nav nav-pills navbar-right navbar-config">
@@ -88,8 +103,14 @@
 
         <div class="navbar-default sidebar" role="navigation">
             <div class="sidebar-nav navbar-collapse">
+                <div id="agent_selector_div">
+                    Selected Agent
+                    <select class="form-control input-sm" id="agent_selector">
+                    </select>
+                </div>
                 <ul class="nav" id="side-menu">
                 </ul>
+
             </div>
         </div>
 
@@ -127,8 +148,8 @@
         </div>
     </div>
 
-    <!-- jQuery Version 1.11.0 -->
-    <script src="plugins/jquery-1.11.0.js"></script>
+    <!-- jQuery Version 3.1.1 -->
+    <script src="plugins/jquery-3.1.1.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
     <script src="plugins/bootstrap/bootstrap.min.js"></script>
@@ -137,17 +158,24 @@
     <script src="plugins/metisMenu/metisMenu.js"></script>
 
     <!-- Vis.JS Plugin JavaScript -->
-    <script src="plugins/vis.js/vis.js"></script>
+    <script src="plugins/vis.js/vis-intelmq.js"></script>
+
+    <!-- Jquery Confirm -->
+    <script src="plugins/jquery-confirm/jquery-confirm.min.js"></script>
 
     <!-- Custom Theme JavaScript -->
     <script src="js/sb-admin-2.js"></script>
 
+
+
+
     <!-- Custom Application JavaScript -->
     <script src="js/static.js"></script>
+    <script src="js/common.js"></script>
     <script src="js/runtime.js"></script>
     <script src="js/pipeline.js"></script>
     <script src="js/defaults.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/configuration.js"></script>
 
 </body>
 

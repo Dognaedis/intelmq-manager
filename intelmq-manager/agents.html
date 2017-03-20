@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>IntelMQ Manager</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="plugins/bootstrap/bootstrap.min.css" rel="stylesheet">
+
+    <!-- MetisMenu CSS -->
+    <link href="plugins/metisMenu/metisMenu.min.css" rel="stylesheet">
+
+    <!-- DataTables CSS -->
+    <link href="plugins/dataTables/dataTables.bootstrap.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="plugins/font-awesome-4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    <!-- Custom CSS -->
+    <link href="css/sb-admin-2.css" rel="stylesheet">
+
+    <!-- Jquery Confirm CSS -->
+    <link href="plugins/jquery-confirm/jquery-confirm.min.css" rel="stylesheet">
+
+
+    <link rel="icon" type="image/png" href="images/logo2.png">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+    <div id="wrapper">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html"><img height="24px"  style="margin-right:10px" src="./images/logo2.png"><img height="20px" src="./images/logo_no_margin_6.png"/></a>
+            </div>
+            <!-- /.navbar-header -->
+
+            <ul class="nav navbar-top-links navbar-left">
+                <li>
+                    <a href="agents.html">
+                        <span class="top-menu-text"><img src="./images/agents.png" width="24px" height="24px">&nbsp;Agents</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="configs.html#load">
+                        <span class="top-menu-text"><img src="./images/config.png" width="24px" height="24px">&nbsp;Configuration</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="management.html">
+                        <span class="top-menu-text"><img src="./images/botnet.png" width="24px" height="24px">&nbsp;Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="status.html">
+                        <span class="top-menu-text"><img src="./images/status.png" width="24px" height="24px">&nbsp;Status</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="monitor.html">
+                        <span class="top-menu-text"><img src="./images/monitor.png" width="24px" height="24px">&nbsp;Monitor</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="about.html">
+                        <span class="top-menu-text"><img src="./images/about.png" width="24px" height="24px">&nbsp;About</span>
+                    </a>
+                </li>
+            </ul>
+            <!-- /.navbar-top-links -->
+        </nav>
+
+        <div class="navbar-default sidebar" role="navigation">
+            <div class="sidebar-nav navbar-collapse">
+                <div id="agent_selector_div">
+                    Selected Agent
+                    <select class="form-control input-sm" id="agent_selector">
+                    </select>
+                </div>
+                <ul class="nav" id="side-menu">
+                </ul>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-wrapper-with-sidebar">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default" id="queues-panel">
+                        <div class="panel-heading">
+                            <h4 id="agents-panel-title">Agents</h4>
+                        </div>
+                        <div class="panel-body">
+                            <div id="" class="col-md-12">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th class=""></th>
+                                            <th class="">Name</th>
+                                            <th class="">Host / IP</th>
+                                            <th class="">Port</th>
+                                            <th class="">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="agents_table">
+
+                                        <tr>
+                                            <td nowrap>
+                                            </td>
+                                            <td style="width:99%;">
+                                                <input id="new_agent_name" placeholder="Agent name" type="text"/>
+                                            </td>
+                                            <td nowrap>
+                                                <input id="new_agent_host" placeholder="Host name or IP address" type="text"/>
+                                            </td>
+                                            <td nowrap>
+                                                <input id="new_agent_port" placeholder="Port" type="text"/>
+                                            </td>
+                                            <td nowrap>
+                                                <button id="add_agent_button" style="width:100%" class="btn btn-xs btn-default" type="submit"><i class="fa fa-plus"></i>&nbsp;&nbsp;Add</button>
+                                            </td>
+
+                                        </tr>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="extended-message-modal" tabindex="-1" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="modal-title">Entire message</h4>
+                    </div>
+                    <div class="modal-body" id="modal-body">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery Version 1.11.0 -->
+    <script src="plugins/jquery-3.1.1.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="plugins/bootstrap/bootstrap.min.js"></script>
+
+    <!-- Metis Menu Plugin JavaScript -->
+    <script src="plugins/metisMenu/metisMenu.js"></script>
+
+    <!-- DataTables JavaScript -->
+    <script src="plugins/dataTables/jquery.dataTables.js"></script>
+    <script src="plugins/dataTables/dataTables.bootstrap.js"></script>
+
+    <!-- Jquery Confirm -->
+    <script src="plugins/jquery-confirm/jquery-confirm.min.js"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script src="js/sb-admin-2.js"></script>
+
+    <!-- Custom JavaScript Vars and Defs -->
+    <script src="js/static.js"></script>
+
+    <!-- Custom Common JavaScript Functions -->
+    <script src="js/common.js"></script>
+
+    <!-- Custom Agents Page Javascript -->
+    <script src="js/agents.js"></script>
+
+</body>
+
+</html>
+
