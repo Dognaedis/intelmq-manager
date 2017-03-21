@@ -47,7 +47,6 @@ var MONITOR_SCALE_MAX_LINE_WIDTH = 10.0;
 //var MONITOR_SCALE_MIN_LINE_SPACING = 1.0;
 var MONITOR_SCALE_MAX_LINE_SPACING = 30.0;
 
-
 var STARTUP_KEYS = ['group', 'name', 'module', 'description'];
 
 var BOT_ID_REGEX = /^[0-9a-zA-Z.-]+$/;
@@ -57,13 +56,14 @@ var ROOT = window.location.href.substring(0,window.location.href.lastIndexOf('/'
 //var LOAD_CONFIG_SCRIPT = ROOT + "php/load_configs.php";
 var MANAGEMENT_SCRIPT = ROOT + "php/controller.php";
 
-var RELOAD_QUEUES_EVERY = 60; /* 60 seconds */
-var RELOAD_LOGS_EVERY = 300; /* 300 seconds */
+var RELOAD_CHARTS_EVERY = 60; /* seconds */
+var RELOAD_QUEUES_EVERY = 60; /* seconds */
+var RELOAD_LOGS_EVERY = 300; /* seconds */
 var LOAD_X_LOG_LINES = 30;
 
 var MESSAGE_LENGTH = 200;
 
 var page_is_exiting = false;
 
-
+var NEXT_RELOAD_SECONDS = RELOAD_CHARTS_EVERY;
 

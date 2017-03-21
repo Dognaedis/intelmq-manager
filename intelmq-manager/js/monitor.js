@@ -644,6 +644,21 @@ function update_charts_display()
     );
 }
 
+function update_reload_seconds()
+{
+    if (NEXT_RELOAD_SECONDS > 0)
+    {
+        $('#refresh_charts').html("Refresh Now ("+NEXT_RELOAD_SECONDS+")");
+        NEXT_RELOAD_SECONDS--;
+    }
+    else
+    {
+        $('#refresh_charts').html("Refresh Now");
+        NEXT_RELOAD_SECONDS = RELOAD_CHARTS_EVERY;
+        refresh_charts();
+    }
+}
+
 /* Things to do on document ready */
 
 $(document).ready(function() {
@@ -668,6 +683,7 @@ $(document).ready(function() {
                 {
                     update_charts_display();
                     refresh_charts();
+                    NEXT_RELOAD_SECONDS = RELOAD_CHARTS_EVERY;
                 }
             );
 
@@ -688,10 +704,10 @@ $(document).ready(function() {
                 update_agent_multi_selector([{id:0, name:'( Local IntelMQ Instance )'}]);
             }
 
-            // update agent list dropdown
+            // interval to update charts
             setInterval(function(){
-                refresh_charts();
-            },60000);
+                update_reload_seconds();
+            },1000);
 
             // Dynamically adapt to fit screen
             window.onresize = resize;
