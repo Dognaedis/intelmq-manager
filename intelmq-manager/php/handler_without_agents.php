@@ -10,6 +10,7 @@
     {
         if (DEBUG_API)
         {
+            error_log("[EXECUTING INTELMQCTL]");
             error_log("[INTELMQCTL REQUEST CONTROLLER]: " . CONTROLLER);
             error_log("[INTELMQCTL REQUEST ARGUMENTS]: " . $arguments);
         }
@@ -22,6 +23,8 @@
 
         if (DEBUG_API)
         {
+            error_log("[GOT INTELMQCTL RESPONSE]");
+            error_log("[EXECUTING INTELMQCTL]");
             error_log("[INTELMQCTL RESPONSE]: " . $return);
         }
         return ($return);
@@ -33,9 +36,11 @@
 
         if (DEBUG_API)
         {
-            error_log("[REQUEST GET]: " . json_encode($_GET));
-            error_log("[REQUEST POST]: " . json_encode($_POST));
+            error_log("[HANDLING REQUEST]");
+            error_log("[REQUESTED GET DATA]: " . json_encode($_GET));
+            error_log("[REQUESTED POST DATA]: " . json_encode($_POST));
         }
+
 
         if (isset($_GET['operation']))
         {
