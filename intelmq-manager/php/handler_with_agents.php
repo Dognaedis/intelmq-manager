@@ -27,6 +27,12 @@
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, True);
         curl_setopt($ch, CURLOPT_TIMEOUT, 20);
 
+        if (DEBUG_API)
+        {
+            error_log("[CURL URL]: " . $url);
+            error_log("[CURL POST DATA]: " . http_build_query($post_data));
+        }
+
         $output = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -34,10 +40,18 @@
 
         if ($http_code == 200)
         {
+            if (DEBUG_API)
+            {
+                error_log("[CURL RESPONSE OK (".$http_code.")]: " . $output);
+            }
             return $output;
         }
         else
         {
+            if (DEBUG_API)
+            {
+                error_log("[CURL RESPONSE ERROR (".$http_code.")]: " . $output);
+            }
             return false;
         }
     }
@@ -183,6 +197,12 @@
     {
         global $FILES;
 
+        if (DEBUG_API)
+        {
+            error_log("[REQUEST GET]: " . json_encode($_GET));
+            error_log("[REQUEST POST]: " . json_encode($_POST));
+        }
+
         if (isset($_GET['operation']))
         {
 
@@ -302,7 +322,7 @@
 
                         case 'local': // get the file from disk
 
-                            if (file_exists(CONFIG_FILES_BASE_FOLDER.'/'.$file['filename']) and $contents=file_get_contents(CONFIG_FILES_BASE_FOLDER.'/'.$file['filename']))
+                            if (file_exists(CONFIG_FILES_BASE_FOLDER.$file['filename']) and $contents=file_get_contents(CONFIG_FILES_BASE_FOLDER.$file['filename']))
                             {
                                 $output=json_decode($contents, true);
                                 if (is_array($output))
@@ -311,12 +331,12 @@
                                 }
                                 else
                                 {
-                                    send_http_response(['result'=>'error', 'error_message'=>'Error getting the data from disk.']);
+                                    send_http_response(['result'=>'error', 'error_message'=>'Error extracting valid data from the file ('.CONFIG_FILES_BASE_FOLDER.$file['filename'].')']);
                                 }
                             }
                             else
                             {
-                                send_http_response(['result'=>'error', 'error_message'=>'Error getting the data from disk.']);
+                                send_http_response(['result'=>'error', 'error_message'=>'Error getting the file from disk ('.CONFIG_FILES_BASE_FOLDER.$file['filename'].')']);
                             }
 
                             break;
@@ -377,9 +397,9 @@
 
                             $file_contents=$_POST['file_contents'];
 
-                            if (file_exists(CONFIG_FILES_BASE_FOLDER.'/'.$file['filename']))
+                            if (file_exists(CONFIG_FILES_BASE_FOLDER.$file['filename']))
                             {
-                                if (file_put_contents(CONFIG_FILES_BASE_FOLDER.'/'.$file['filename'], $file_contents))
+                                if (file_put_contents(CONFIG_FILES_BASE_FOLDER.$file['filename'], $file_contents))
                                 {
                                     send_http_response(['result'=>'ok', 'data'=>['md5'=>md5($file_contents)]]);
                                 }

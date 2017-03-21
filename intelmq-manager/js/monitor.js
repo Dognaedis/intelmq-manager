@@ -368,104 +368,99 @@ function create_chart(agent, nodes, edges) {
     });
 }
 
-function refresh_charts()
+function refresh_chart(agent_id)
 {
+    var chart_nodes;
+    var chart_edges;
 
-    $.each(agents, function(agent_id, agent) {
-        var chart_nodes;
-        var chart_edges;
+    $('#chart_refresh_button_'+agent_id+' i').removeClass('fa-repeat').addClass('fa-spinner');
 
+    load_file(agent_id, 'defaults',
+        function (data)
+        {
+            agents[agent_id].defaults = read_defaults_conf(data);
 
-        if (agents[agent_id].visible) {
-
-            load_file(agent_id, 'defaults',
+            load_file(agent_id, 'runtime',
                 function (data)
                 {
-                    agents[agent_id].defaults = read_defaults_conf(data);
+                    agents[agent_id].runtime = data;
+                    chart_nodes = read_runtime_conf(agents[agent_id].runtime);
 
-                    load_file(agent_id, 'runtime',
+                    load_file(agent_id, 'pipeline',
                         function (data)
                         {
-                            agents[agent_id].runtime = data;
-                            chart_nodes = read_runtime_conf(agents[agent_id].runtime);
+                            agents[agent_id].pipeline = data;
 
-                            load_file(agent_id, 'pipeline',
+                            chart_edges = read_pipeline_conf(agents[agent_id].pipeline, chart_nodes);
+                            chart_nodes = add_defaults_to_nodes(chart_nodes, agents[agent_id].defaults);
+
+                            get_botnet_queues(agent_id,
                                 function (data)
                                 {
-                                    agents[agent_id].pipeline = data;
 
-                                    chart_edges = read_pipeline_conf(agents[agent_id].pipeline, chart_nodes);
-                                    chart_nodes = add_defaults_to_nodes(chart_nodes, agents[agent_id].defaults);
+                                    agents[agent_id].queues={};
 
-                                    get_botnet_queues(agent_id,
+                                    $.each(data, function(bot_id, queues) {
+
+                                        agents[agent_id].queues[bot_id]={};
+
+                                        if (queues['internal_queue']!=undefined)
+                                        {
+                                            agents[agent_id].queues[bot_id]['internal'] = queues['internal_queue'];
+                                        }
+                                        else
+                                        {
+                                            agents[agent_id].queues[bot_id]['internal'] = 0;
+                                        }
+
+                                        if (queues['destination_queues']!=undefined)
+                                        {
+                                            agents[agent_id].queues[bot_id]['destination']={};
+
+                                            $.each(queues['destination_queues'] , function( i, queue )
+                                            {
+                                                agents[agent_id].queues[bot_id]['destination'][queue[0]]=queue[1];
+                                            });
+                                        }
+                                        else
+                                        {
+                                            agents[agent_id].queues[bot_id]['destination'] = {};
+                                        }
+
+                                        if (queues['source_queue']!=undefined)
+                                        {
+                                            agents[agent_id].queues[bot_id]['source']={};
+
+                                            agents[agent_id].queues[bot_id]['source'][queues['source_queue'][0]] = queues['source_queue'][1];
+
+                                        }
+                                        else
+                                        {
+                                            agents[agent_id].queues[bot_id]['source'] = {};
+                                        }
+
+                                    });
+
+                                    get_botnet_status(agent_id,
                                         function (data)
                                         {
+                                            agents[agent_id].status = data;
+                                            if (USE_AGENTS)
+                                            {
+                                                get_botnet_stats(agent_id,
+                                                    function (data) {
+                                                        agents[agent_id].stats = data;
 
-                                            agents[agent_id].queues={};
-
-                                            $.each(data, function(bot_id, queues) {
-
-                                                agents[agent_id].queues[bot_id]={};
-
-                                                if (queues['internal_queue']!=undefined)
-                                                {
-                                                    agents[agent_id].queues[bot_id]['internal'] = queues['internal_queue'];
-                                                }
-                                                else
-                                                {
-                                                    agents[agent_id].queues[bot_id]['internal'] = 0;
-                                                }
-
-                                                if (queues['destination_queues']!=undefined)
-                                                {
-                                                    agents[agent_id].queues[bot_id]['destination']={};
-
-                                                    $.each(queues['destination_queues'] , function( i, queue )
-                                                    {
-                                                        agents[agent_id].queues[bot_id]['destination'][queue[0]]=queue[1];
-                                                    });
-                                                }
-                                                else
-                                                {
-                                                    agents[agent_id].queues[bot_id]['destination'] = {};
-                                                }
-
-                                                if (queues['source_queue']!=undefined)
-                                                {
-                                                    agents[agent_id].queues[bot_id]['source']={};
-
-                                                    agents[agent_id].queues[bot_id]['source'][queues['source_queue'][0]] = queues['source_queue'][1];
-
-                                                }
-                                                else
-                                                {
-                                                    agents[agent_id].queues[bot_id]['source'] = {};
-                                                }
-
-                                            });
-
-                                            get_botnet_status(agent_id,
-                                                function (data)
-                                                {
-                                                    agents[agent_id].status = data;
-                                                    if (USE_AGENTS)
-                                                    {
-                                                        get_botnet_stats(agent_id,
-                                                            function (data) {
-                                                                agents[agent_id].stats = data;
-
-                                                                update_chart(agent_id, chart_nodes, chart_edges);
-                                                            },
-                                                            show_error
-                                                        );
-                                                    }
-                                                    else
-                                                    {
                                                         update_chart(agent_id, chart_nodes, chart_edges);
-                                                    }
-                                                },
-                                                show_error
-                                            );
+                                                        $('#chart_refresh_button_'+agent_id+' i').removeClass('fa-spinner').addClass('fa-repeat');
+                                                    },
+                                                    show_error
+                                                );
+                                            }
+                                            else
+                                            {
+                                                update_chart(agent_id, chart_nodes, chart_edges);
+                                            }
                                         },
                                         show_error
                                     );
@@ -478,10 +473,19 @@ function refresh_charts()
                 },
                 show_error
             );
+        },
+        show_error
+    );
+}
+
+function refresh_charts()
+{
+    $.each(agents, function(agent_id, agent) {
+        if (agents[agent_id].visible) {
+            refresh_chart(agent_id);
         }
         else
         {
-
         }
     });
 
@@ -526,7 +530,9 @@ function create_chart_place(agent)
         '<div class="'+ tiles[selected_tile].classes +'" style="padding:5px; height:'+ ($(window).height()-$('#header_nav').height()-(10*tiles[selected_tile].num_rows))/tiles[selected_tile].num_rows +'px;" id="chart_div_'+agent+'">' +
         '   <div class="panel panel-default" style="height:100%;">' +
         '       <div id="chart_panel_title_'+agent+'" class="panel-heading" style="padding-bottom:5px; padding-top: 5px; padding-left:10px;">' +
-        '           <b>' + agents[agent].name + '</b>'+
+        '           <b>' + agents[agent].name + '</b>' +
+        '           <span id="chart_refresh_button_'+agent+'" class="chart_refresh_button pull-right btn btn-xs btn-default"><i class="fa fa-repeat fa-fw"></i></span>'+
+        '           <span style="display:none;" id="chart_loader_button_'+agent+'" class="chart_loader_button pull-right btn btn-xs btn-default"><i class="fa fa-spinner fa-fw"></i></span>'+
         '       </div> ' +
         '       <div id="chart_panel_body_'+agent+'" class="panel-body" style="height:100%; padding:0px; padding-bottom:30px;">' +
         '           <div id="chart_'+agent+'" style="height:100%;">' +
@@ -538,9 +544,11 @@ function create_chart_place(agent)
     agents[agent].div_place=$('#charts #chart_div_' + agent);
     agents[agent].chart_place=$('#charts #chart_' + agent);
 
+    $('#chart_refresh_button_'+agent).click(function(e, item){
+        refresh_chart(agent);
+    });
+
 }
-
-
 
 function update_agent_multi_selector(agent_list)
 {
@@ -619,9 +627,6 @@ $(document).ready(function() {
         {
             // Everything should be done only after the main configs are successfully retrieved
 
-            // Dynamically load available bots
-            // load_file('bots', load_bots);
-
             $("#check_all_agents").click(function(){
                 $('#agent_multi_selector label').addClass('active');
                 update_charts_display();
@@ -654,11 +659,8 @@ $(document).ready(function() {
             }
             else
             {
-                //$('#agent_selector_div').hide();
-                //$('#agent_multi_selector_div').hide();
                 update_agent_multi_selector([{id:0, name:'( Local IntelMQ Instance )'}]);
             }
-
 
             // update agent list dropdown
             setInterval(function(){

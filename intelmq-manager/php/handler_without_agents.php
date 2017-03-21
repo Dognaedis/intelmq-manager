@@ -8,18 +8,34 @@
 
     function query_intelmqctl($arguments)
     {
+        if (DEBUG_API)
+        {
+            error_log("[INTELMQCTL REQUEST CONTROLLER]: " . CONTROLLER);
+            error_log("[INTELMQCTL REQUEST ARGUMENTS]: " . $arguments);
+        }
+
         $command = sprintf(CONTROLLER, $arguments);
 
         set_time_limit(60);
 
         $return = shell_exec($command);
 
+        if (DEBUG_API)
+        {
+            error_log("[INTELMQCTL RESPONSE]: " . $return);
+        }
         return ($return);
     };
 
     function handle_request()
     {
         global $FILES;
+
+        if (DEBUG_API)
+        {
+            error_log("[REQUEST GET]: " . json_encode($_GET));
+            error_log("[REQUEST POST]: " . json_encode($_POST));
+        }
 
         if (isset($_GET['operation']))
         {
@@ -62,21 +78,21 @@
 
                         case 'local': // get the file from disk
 
-                            if (file_exists(CONFIG_FILES_BASE_FOLDER.'/'.$file['filename']))
+                            if (file_exists(CONFIG_FILES_BASE_FOLDER.$file['filename']))
                             {
-                                $output=json_decode(file_get_contents(CONFIG_FILES_BASE_FOLDER.'/'.$file['filename']),true);
+                                $output=json_decode(file_get_contents(CONFIG_FILES_BASE_FOLDER.$file['filename']),true);
                                 if (is_array($output))
                                 {
                                     send_http_response(['result'=>'ok', 'data'=>['contents' => $output]]);
                                 }
                                 else
                                 {
-                                    send_http_response(['result'=>'error', 'error_message'=>'bError getting the data from disk.']);
+                                    send_http_response(['result'=>'error', 'error_message'=>'Error extracting valid data from the file ('.CONFIG_FILES_BASE_FOLDER.$file['filename'].')']);
                                 }
                             }
                             else
                             {
-                                send_http_response(['result'=>'error', 'error_message'=>'aError getting the data from disk.']);
+                                send_http_response(['result'=>'error', 'error_message'=>'Error getting the file from disk ('.CONFIG_FILES_BASE_FOLDER.$file['filename'].')']);
                             }
 
                             break;
@@ -112,9 +128,9 @@
 
                             $file_contents=$_POST['file_contents'];
 
-                            if (file_exists(CONFIG_FILES_BASE_FOLDER.'/'.$file['filename']))
+                            if (file_exists(CONFIG_FILES_BASE_FOLDER.$file['filename']))
                             {
-                                if (file_put_contents(CONFIG_FILES_BASE_FOLDER.'/'.$file['filename'], $file_contents))
+                                if (file_put_contents(CONFIG_FILES_BASE_FOLDER.$file['filename'], $file_contents))
                                 {
                                     send_http_response(['result'=>'ok', 'data'=>['md5'=>md5($file_contents)]]);
                                 }
