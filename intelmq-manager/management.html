@@ -25,6 +25,10 @@
 
     <!-- Custom CSS -->
     <link href="css/sb-admin-2.css" rel="stylesheet">
+
+    <!-- Jquery Confirm CSS -->
+    <link href="plugins/jquery-confirm/jquery-confirm.min.css" rel="stylesheet">
+
     <link href="css/management.css" rel="stylesheet">
 
     <link rel="icon" type="image/png" href="images/logo2.png">
@@ -51,6 +55,11 @@
 
             <ul class="nav navbar-top-links navbar-left">
                 <li>
+                    <a href="agents.html">
+                        <span class="top-menu-text"><img src="./images/agents.png" width="24px" height="24px">&nbsp;Agents</span>
+                    </a>
+                </li>
+                <li>
                     <a href="configs.html#load">
                         <span class="top-menu-text"><img src="./images/config.png" width="24px" height="24px">&nbsp;Configuration</span>
                     </a>
@@ -58,6 +67,11 @@
                 <li>
                     <a href="management.html">
                         <span class="top-menu-text"><img src="./images/botnet.png" width="24px" height="24px">&nbsp;Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="status.html">
+                        <span class="top-menu-text"><img src="./images/status.png" width="24px" height="24px">&nbsp;Status</span>
                     </a>
                 </li>
                 <li>
@@ -74,24 +88,39 @@
             <!-- /.navbar-top-links -->
         </nav>
 
-        <!-- Page Content -->
-        <div id="page-wrapper">
-            <div class="row">
-                <div id="graph-container">
-                    <div class="col-md-2">
-                        <div class="panel panel-default" id="botnet-status-panel">
-                            <div class="panel-heading">
-                                <h4 id="botnet-status-panel-title">Botnet Status:<h4>
-                            </div>
-                            <div class="panel-body">
-                                <div class="panel-div">Status: <span id="botnet-status" class="bg-warning">Unknown</span></div><div id="botnet-buttons"></div>
-                            </div>
+        <div class="navbar-default sidebar" role="navigation">
+            <div class="sidebar-nav navbar-collapse">
+                <div id="agent_selector_div" style="display:none;">
+                    Selected Agent
+                    <select class="form-control input-sm" id="agent_selector">
+                    </select>
+                </div>
+                <ul class="nav" id="side-menu">
+                    <div style="padding:20px;" id="botnet-status-panel">
+                        <h4 id="botnet-status-panel-title">Botnet Status:</h4>
+                        <div class="panel-div">
+                            Status:
+                            <span id="botnet-status" class="bg-warning">
+                                    Unknown
+                            </span>
+                            <span class="pull-right">
+                                    <button type="submit" id="start_botnet" class="btn btn-xs btn-default"><span class="fa fa-fw fa-play"></span></button>
+                                    <button type="submit" id="stop_botnet" class="btn btn-xs btn-default"><span class="fa fa-fw fa-square"></span></button>
+                            </span>
                         </div>
                     </div>
-                    <div class="col-md-10">
+                </ul>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-wrapper-with-sidebar">
+            <div class="row">
+                <div id="graph-container">
+                    <div class="col-md-12">
                         <div class="panel panel-default" id="bot-table-panel">
                             <div class="panel-heading">
-                                <h4 id="bot-status-panel-title">Individual Bot Status:<h4>
+                                <h4 id="bot-status-panel-title">Individual Bot Status:</h4>
                             </div>
                             <div class="panel-body">
                                 <div class="table-responsive">
@@ -109,9 +138,11 @@
                 </div>
             </div>
         </div>
+    </div>
 
-    <!-- jQuery Version 1.11.0 -->
-    <script src="plugins/jquery-1.11.0.js"></script>
+
+    <!-- jQuery Version 3.1.1 -->
+    <script src="plugins/jquery-3.1.1.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
     <script src="plugins/bootstrap/bootstrap.min.js"></script>
@@ -123,11 +154,16 @@
     <script src="plugins/dataTables/jquery.dataTables.js"></script>
     <script src="plugins/dataTables/dataTables.bootstrap.js"></script>
 
+    <!-- Jquery Confirm -->
+    <script src="plugins/jquery-confirm/jquery-confirm.min.js"></script>
+
     <!-- Custom Theme JavaScript -->
     <script src="js/sb-admin-2.js"></script>
 
-    <!-- Custom Application JavaScript -->
+
+        <!-- Custom Application JavaScript -->
     <script src="js/static.js"></script>
+    <script src="js/common.js"></script>
     <script src="js/management.js"></script>
 
 </body>

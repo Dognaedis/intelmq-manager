@@ -17,6 +17,9 @@
     <!-- MetisMenu CSS -->
     <link href="plugins/metisMenu/metisMenu.min.css" rel="stylesheet">
 
+    <!-- Vis.JS Plugin CSS -->
+    <link href="plugins/vis.js/vis-intelmq.css" rel="stylesheet" type="text/css">
+
     <!-- DataTables CSS -->
     <link href="plugins/dataTables/dataTables.bootstrap.css" rel="stylesheet">
 
@@ -25,6 +28,11 @@
 
     <!-- Custom CSS -->
     <link href="css/sb-admin-2.css" rel="stylesheet">
+
+    <!-- Jquery Confirm CSS -->
+    <link href="plugins/jquery-confirm/jquery-confirm.min.css" rel="stylesheet">
+
+    <!--<link href="css/management.css" rel="stylesheet">-->
 
     <link rel="icon" type="image/png" href="images/logo2.png">
 
@@ -42,19 +50,18 @@
     <div id="wrapper">
 
         <!-- Navigation -->
-        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" id="header_nav" style="margin-bottom: 0">
             <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
                 <a class="navbar-brand" href="index.html"><img height="24px"  style="margin-right:10px" src="./images/logo2.png"><img height="20px" src="./images/logo_no_margin_6.png"/></a>
             </div>
             <!-- /.navbar-header -->
 
             <ul class="nav navbar-top-links navbar-left">
+                <li>
+                    <a href="agents.html">
+                        <span class="top-menu-text"><img src="./images/agents.png" width="24px" height="24px">&nbsp;Agents</span>
+                    </a>
+                </li>
                 <li>
                     <a href="configs.html#load">
                         <span class="top-menu-text"><img src="./images/config.png" width="24px" height="24px">&nbsp;Configuration</span>
@@ -63,6 +70,11 @@
                 <li>
                     <a href="management.html">
                         <span class="top-menu-text"><img src="./images/botnet.png" width="24px" height="24px">&nbsp;Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="status.html">
+                        <span class="top-menu-text"><img src="./images/status.png" width="24px" height="24px">&nbsp;Status</span>
                     </a>
                 </li>
                 <li>
@@ -81,101 +93,52 @@
 
         <div class="navbar-default sidebar" role="navigation">
             <div class="sidebar-nav navbar-collapse">
-                <ul class="nav" id="side-menu">
-                </ul>
+                <div id="agent_selector_div" style="display:none;">
+                    <!--Selected Agent-->
+                    <select class="form-control input-sm" id="agent_selector">
+                    </select>
+                </div>
+
+                <div style="text-align:center; padding:5px;">
+                    Visible Agents / Botnets
+                </div>
+
+
+                <div id="agent_multi_selector_div" style="padding:5px;">
+                    <div id="agent_multi_selector" class="btn-group-vertical .btn-group-justified btn-block" data-toggle="buttons">
+
+                    </div>
+                </div>
+
+                <div style="padding:10px; text-align:center">
+                    <div class="btn-group">
+                        <button id="check_all_agents" type="button" class="btn btn-default btn-sm">All</button>
+                        <button id="uncheck_all_agents"type="button" class="btn btn-default btn-sm">None</button>
+                    </div>
+                    <button id="refresh_charts" type="button" class="btn btn-primary btn-sm">Refresh Now</button>
+                </div>
+
+                <div style="padding:10px; text-align:center">
+                    <div class="btn-group">
+                        <button id="set_tile_1" type="button" class="btn btn-default" onClick="set_tile(1);" ><i class="fa fa-square fa-fw"></i></button>
+                        <button id="set_tile_2" type="button" class="btn btn-default" onClick="set_tile(2);" ><i class="fa fa-th-large fa-fw"></i></button>
+                        <button id="set_tile_3" type="button" class="btn btn-default" onClick="set_tile(3);" ><i class="fa fa-th fa-fw"></i></button>
+                    </div>
+                </div>
+
             </div>
         </div>
-
 
         <!-- Page Content -->
         <div id="page-wrapper-with-sidebar">
-            <div class="row">
-                <div class="col-md-12"><h3>Monitoring: <span id="monitor-target">All</span></h3></div>
-                <div id="graph-container" class="col-md-12">
-                    <div class="col-md-12">
-                        <div class="panel panel-default" id="queues-panel">
-                            <div class="panel-heading">
-                                <h4 id="queues-panel-title">Queues<h4>
-                            </div>
-                            <div class="panel-body">
-                                <div id="source-queue-table-div" class="col-md-4">
-                                    <table class="table">
-                                        <thead>
-                                            <tr><th class="width-80">Source Queue</th><th class="width-20">Count</th></tr>
-                                        </thead>
-                                        <tbody id="source-queue">
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div id="internal-queue-table-div" class="col-md-4">
-                                    <table class="table">
-                                        <thead>
-                                            <tr><th class="width-80">Internal Queue</th><th class="width-20">Count</th></tr>
-                                        </thead>
-                                        <tbody id="internal-queue">
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div id="destination-queues-table-div" class="col-md-4">
-                                    <table class="table">
-                                        <thead>
-                                            <tr><th class="width-80" id="destination-queue-header">Destination Queue</th><th class="width-20">Count</th></tr>
-                                        </thead>
-                                        <tbody id="destination-queues">
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-12">
-                        <div class="panel panel-default" id="logs-panel">
-                            <div class="panel-heading">
-                                <h4 id="logs-panel-title">Logs<h4>
-                            </div>
-                            <div class="panel-body">
-                                <div class="panel-div">Log Level: <select id="log-level-indicator" onchange="load_bot_log()">
-                                    <option value="ALL">All</option>
-                                    <option value="DEBUG">Debug</option>
-                                    <option value="INFO">Info</option>
-                                    <option value="WARNING">Warning</option>
-                                    <option value="ERROR">Error</option>
-                                    <option value="CRITICAL">Critical</option>
-                                </select></div>
-                                <br>
-                                <div class="table-responsive">
-                                    <table class="table" id="log-table">
-                                        <thead>
-                                            <tr><th>Time</th><th>ID</th><th>Level</th><th>Message</th><th></th></tr>
-                                        </thead>
-                                        <tbody id="log-table-body">
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <div class="row" id="charts" style="height:100%; padding:0px;">
 
-        <!-- Modal -->
-        <div class="modal fade" id="extended-message-modal" tabindex="-1" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                        <h4 class="modal-title" id="modal-title">Entire message</h4>
-                    </div>
-                    <div class="modal-body" id="modal-body">
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- jQuery Version 1.11.0 -->
-    <script src="plugins/jquery-1.11.0.js"></script>
+    <!-- jQuery Version 3.1.1 -->
+    <script src="plugins/jquery-3.1.1.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
     <script src="plugins/bootstrap/bootstrap.min.js"></script>
@@ -187,14 +150,23 @@
     <script src="plugins/dataTables/jquery.dataTables.js"></script>
     <script src="plugins/dataTables/dataTables.bootstrap.js"></script>
 
+    <!-- Jquery Confirm -->
+    <script src="plugins/jquery-confirm/jquery-confirm.min.js"></script>
+
+    <!-- Vis.JS Plugin JavaScript -->
+    <script src="plugins/vis.js/vis-intelmq.js"></script>
+
     <!-- Custom Theme JavaScript -->
     <script src="js/sb-admin-2.js"></script>
 
     <!-- Custom Application JavaScript -->
     <script src="js/static.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/runtime.js"></script>
+    <script src="js/pipeline.js"></script>
+    <script src="js/defaults.js"></script>
     <script src="js/monitor.js"></script>
 
 </body>
 
 </html>
-

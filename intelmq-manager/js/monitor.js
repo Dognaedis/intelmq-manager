@@ -1,270 +1,721 @@
+var defaults = {};
+var nodes = {};
+var edges = {};
+var bots = {};
 
-var ALL_BOTS = 'All Bots';
+var graph = null;
+var graph_container = null;
+var popup = null;
+var span = null;
+var table = null;
 
-var bot_logs = {};
-var bot_queues = {};
-var reload_queues = null;
-var reload_logs = null;
+var agents = {};
 
-
-$('#log-table').dataTable({
-    lengthMenu: [[5, 10, 25, -1], [5, 10, 25, "All"]],
-    pageLength: 10,
-    order: [0, 'desc'],
-    columns: [
-        { "data": "date" },
-        { "data": "bot_id" },
-        { "data": "log_level" },
-        { "data": "message" },
-        { "data": "actions" }
-    ]
-});
-
-window.onresize = function () {
-    redraw();
+var tiles={
+    "1":{   classes: "chart_place col-md-12",
+            num_rows: 1},
+    "2":{   classes: "chart_place col-md-6",
+            num_rows: 2},
+    "3":{   classes: "chart_place col-md-4",
+            num_rows: 3}
 };
 
-function redraw() {
-    redraw_logs();
-    redraw_queues();
+var selected_tile="1";
+
+function resize() {
+    // Resize body
+    var graph_container = document.getElementById('graph-container');
+    graph_container.style.height = (window.innerHeight - graph_container.offsetTop) + "px";
+    graph_container.style.overflowX = "auto";
+    graph_container.style.overflowY = "auto";
+    
+    if (graph != null && graph != undefined) {
+        graph.redraw();
+        graph.fit();
+    }
+    load_html_elements();
 }
 
-function redraw_logs() {
-    $('#log-table').dataTable().fnClearTable();
+function load_html_elements() {
+    // Load popup, span and table
+    graph_container = document.getElementById('graph-container');
+    popup = document.getElementById("graph-popUp");
+    span = document.getElementById('graph-popUp-title');
+    table = document.getElementById("graph-popUp-fields");
+}
+
+
+function convert_edges(agent, edges)
+{
+    var new_edges = [];
     
-    if  (bot_logs == {}) {
-        $('#log-table').dataTable().fnAdjustColumnSizing();
-        $('#log-table').dataTable().fnDraw();
-        return;
-    }
-    
-    for (index in bot_logs) {
-        var log_row = $.extend(true, {}, bot_logs[index]);
-        
-        if (log_row['extended_message']) {
-            buttons_cell = '' +
-                '<button type="submit" class="btn btn-default btn-xs" data-toggle="modal" data-target="#extended-message-modal" onclick="show_extended_message(\'' + index + '\')"><span class="glyphicon glyphicon-plus"></span></button>';
-            log_row['actions'] = buttons_cell;
-        } else if (log_row['message'].length > MESSAGE_LENGTH) {
-            log_row['message'] = log_row['message'].slice(0, MESSAGE_LENGTH) + '<strong>...</strong>';
-            buttons_cell = '' +
-                '<button type="submit" class="btn btn-default btn-xs" data-toggle="modal" data-target="#extended-message-modal" onclick="show_extended_message(\'' + index + '\')"><span class="glyphicon glyphicon-plus"></span></button>';
-            log_row['actions'] = buttons_cell;            
-        } else {
-            log_row['actions'] = '';
+    for (index in edges) {
+        var new_edge = {};
+        new_edge.id = edges[index]['id'];
+        new_edge.from = edges[index]['from'];
+        new_edge.to = edges[index]['to'];
+
+        new_edge.arrows = {to:{scaleFactor:1}};
+
+        if (agents[agent].status[new_edge.to] == "running")
+        {
+            // 'To' bot is running
+            new_edge.color = '#888888';
+
+            new_edge.font = {size:18, align: 'top', color:'#555555'};
+
+            new_edge.width = 1;
+            new_edge.title = "";
+
+            if (USE_AGENTS)
+            {
+                $.each(agents[agent].stats, function (n, bot) {
+
+                    if ((bot.name == new_edge.from) && (bot.stats.avg_produced_per_time != undefined)) {
+                        var stat_avg = bot.stats.avg_produced_per_time;
+                        new_edge.width = (((stat_avg <= STATISTICS_PER_TIME_MAX ? stat_avg : STATISTICS_PER_TIME_MAX) / STATISTICS_PER_TIME_MAX) * MONITOR_SCALE_MAX_LINE_WIDTH) + 1;
+                        new_edge.title += "<b>Avg. of produced (last time unit): </b> " + stat_avg + " / ";
+                    }
+                });
+            }
         }
-        
-        
-        log_row['DT_RowClass'] = LEVEL_CLASS[log_row['log_level']];
-        
-        
-        $('#log-table').dataTable().fnAddData(log_row);
+        else
+        {
+            // 'To' bot is not running
+            new_edge.color = '#AA0000';
+
+            new_edge.font = {size:18, align: 'top', color:'#555555'};
+            new_edge.width = 5;
+            new_edge.title = "";
+        }
+
+        var queue_count = agents[agent].queues[new_edge.from].destination[new_edge.to+'-queue'];
+        if (queue_count != undefined) {
+            var dash_spacing = ((queue_count <= QUEUE_SCALE_MAX ? queue_count : QUEUE_SCALE_MAX) / QUEUE_SCALE_MAX) * MONITOR_SCALE_MAX_LINE_SPACING;
+        }
+        else
+        {
+            var dash_spacing = 0;
+        }
+
+        if (queue_count > 0)
+        {
+            new_edge.dashes = [3, dash_spacing + new_edge.width - 1];
+        }
+
+        new_edge.label = queue_count;
+        new_edge.title += "<b>Queue:</b> " + queue_count;
+
+        new_edges.push(new_edge);
     }
-    
-    $('#log-table').dataTable().fnAdjustColumnSizing();
-    $('#log-table').dataTable().fnDraw();
+    return new_edges;
 }
 
-function redraw_queues() {
-    var bot_id = document.getElementById('monitor-target').innerHTML;
+function convert_nodes(agent, nodes)
+{
+    var new_nodes = [];
 
-    var source_queue_element = document.getElementById('source-queue');
-    var internal_queue_element = document.getElementById('internal-queue');
-    var destination_queues_element = document.getElementById('destination-queues');
+    for (index in nodes) {
+        var new_node = {};
+        new_node.id = nodes[index]['id'];
+        new_node.label = nodes[index]['id'];
+        new_node.details = JSON.stringify(nodes[index], undefined, 2).replace(/\n/g, '\n<br>').replace(/ /g, "&nbsp;");
+        new_node.status = agents[agent].status[new_node.id];
 
-    source_queue_element.innerHTML = '';
-    internal_queue_element.innerHTML = '';
-    destination_queues_element.innerHTML = '';
+        if(agents[agent].queues[new_node.id] != undefined)
+        {
+            new_node.queues = JSON.stringify(agents[agent].queues[new_node.id], undefined, 2).replace(/\n/g, '\n<br>').replace(/ /g, "&nbsp;");
+        }
 
-    var bot_info = {};
-    if (bot_id == ALL_BOTS) {
-        bot_info['source_queues'] = {};
-        bot_info['destination_queues'] = {};
+        if (new_node.status == "running")
+        {
+            new_node.group = nodes[index]['group'];
+        }
+        else
+        {
+            new_node.group = nodes[index]['group']+'_Disabled';
+        }
 
-        for (index in bot_queues) {
-            var source_queue = bot_queues[index]['source_queue'];
-            var destination_queues = bot_queues[index]['destination_queues'];
-            var internal_queue = bot_queues[index]['internal_queue'];
+        if (USE_AGENTS)
+        {
+            $.each(agents[agent].stats, function (index, element){
+                if (element.name == new_node.id)
+                {
+                    new_node.stats = JSON.stringify(element.stats, undefined, 2).replace(/\n/g, '\n<br>').replace(/ /g, "&nbsp;");
+                }
+            });
+        }
 
-            if (source_queue) {
-                bot_info['destination_queues'][source_queue[0]] = source_queue;
-            }
+        new_nodes.push(new_node);
+    }
+    return new_nodes;
+}
 
-            if (internal_queue !== undefined) {
-              var queue_name = index + '-queue-internal';
-              bot_info['destination_queues'][queue_name] = [queue_name, internal_queue];
-            }
+function create_chart(agent, nodes, edges) {
 
-            if (destination_queues) {
-                for (index in destination_queues) {
-                    bot_info['destination_queues'][destination_queues[index][0]] = destination_queues[index];
+    var options = {
+        layout:{
+            randomSeed:0,
+            improvedLayout:true,
+            hierarchical:{
+                sortMethod:"hubsize",
+                direction:"DU",
+                //sortMethod:"directed",
+                //direction:"UD",
+                parentCentralization: false,
+                nodeSpacing:350
+            },
+        },
+        nodes: {
+            labelHighlightBold: false,
+            font: {
+                face: 'arial',
+                size: 18,
+            },
+            shadow:{
+                color: 'rgba(0,0,0,1)',
+                size:4,
+                x: 0,
+                y: 1
+            },
+            borderWidth:2
+        },
+        edges: {
+            smooth: {
+            "type": "discrete",
+            "forceDirection": "none",
+            "roundness": 0.3},
+            length: 300,
+            shadow:false,
+            arrowStrikethrough: false,
+
+        },
+        groups: {
+            Collector: {
+                shape: 'box',
+                color:{
+                    background:'#FF4444',
+                    border:'#FF4444',
+                    highlight:{
+                        background:'#EE3333',
+                        border:'#333333',
+                    },
+                    hover:{
+                        background:'#DD2222',
+                        border:'#DD2222'
+                    }
+                },
+                font:{
+                    color:'#000000'
+                }
+            },
+            Parser: {
+                shape: 'box',
+                color:{
+                    background:'#44EE44',
+                    border:'#44EE44',
+                    highlight:{
+                        background:'#33DD33',
+                        border:'#333333',
+                    },
+                    hover:{
+                        background:'#22CC22',
+                        border:'#22CC22'
+                    }
+                },
+                font:{
+                    color:'#000000'
+                }
+            },
+            Expert: {
+                shape: 'box',
+                color:{
+                    background:'#44AAFF',
+                    border:'#44AAFF',
+                    highlight:{
+                        background:'#3399EE',
+                        border:'#333333'
+                    },
+                    hover:{
+                        background:'#2288DD',
+                        border:'#2288DD'
+                    }
+                },
+                font:{
+                    color:'#000000'
+                }
+            },
+            Output: {
+                shape: 'box',
+                color:{
+                    background:'#EEEE44',
+                    border:'#EEEE44',
+                    highlight:{
+                        background:'#DDDD44',
+                        border:'#333333'
+                    },
+                    hover:{
+                        background:'#CCCC22',
+                        border:'#CCCC22'
+                    }
+                },
+                font:{
+                    color:'#000000'
+                }
+            },
+            Collector_Disabled: {
+                shape: 'box',
+                color:{
+                    background:'#FFFFFF',
+                    border:'#FF4444',
+                    highlight:{
+                        background:'#FFFFFF',
+                        border:'#333333'
+                    },
+                    hover:{
+                        background:'#CCCCCC',
+                        border:'#CC2222'
+                    }
+                },
+                font:{
+                    color:'#FF4444'
+                }
+            },
+            Parser_Disabled: {
+                shape: 'box',
+                color:{
+                    background:'#FFFFFF',
+                    border:'#44EE44',
+                    highlight:{
+                        background:'#FFFFFF',
+                        border:'#333333'
+                    },
+                    hover:{
+                        background:'#CCCCCC',
+                        border:'#22CC22'
+                    }
+                },
+                font:{
+                    color:'#44EE44'
+                }
+            },
+            Expert_Disabled: {
+                shape: 'box',
+                color:{
+                    background:'#FFFFFF',
+                    border:'#44AAFF',
+                    highlight:{
+                        background:'#FFFFFF',
+                        border:'#333333'
+                    },
+                    hover:{
+                        background:'#CCCCCC',
+                        border:'#2222CC'
+                    }
+                },
+                font:{
+                    color:'#44AAFF'
+                }
+            },
+            Output_Disabled: {
+                shape: 'box',
+                color:{
+                    background:'#FFFFFF',
+                    border:'#EEEE44',
+                    highlight:{
+                        background:'#FFFFFF',
+                        border:'#333333'
+                    },
+                    hover:{
+                        background:'#CCCCCC',
+                        border:'#CCCC22'
+                    }
+                },
+                font:{
+                    color:'#EEEE44'
                 }
             }
         }
-    } else {
-        var bot_info = bot_queues[bot_id];
-    }
+    };
 
+    var place = $('#chart_'+agent)[0];
 
+    agents[agent].chart = {data:{nodes:null, edges:null}, network:null};
+    agents[agent].chart.data.nodes = new vis.DataSet(nodes);
+    agents[agent].chart.data.edges = new vis.DataSet(edges);
 
-    if (bot_info) {
-        if (bot_info['source_queue']) {
-            var source_queue = source_queue_element.insertRow();
-            var cell0 = source_queue.insertCell(0);
-            cell0.innerHTML = bot_info['source_queue'][0]
+    agents[agent].chart.network = new vis.Network(place, agents[agent].chart.data, options);
+    //agents[agent].chart.network.fit();
 
-            var cell1 = source_queue.insertCell(1);
-            cell1.innerHTML = bot_info['source_queue'][1]
+    agents[agent].chart.network.on("click", function (params) {
+
+        if (params.nodes[0]!=undefined)
+        {
+            // a node has been clicked
+            msg_body='<b>Status: </b>'+this.body.nodes[params.nodes[0]].options.status;
+            msg_body+='<br><b>Queues: </b><br>'+this.body.nodes[params.nodes[0]].options.queues;
+            msg_body+='<br><b>Stats: </b><br>'+this.body.nodes[params.nodes[0]].options.stats;
+            msg_body+='<br><b>Details: </b><br>'+this.body.nodes[params.nodes[0]].options.details;
+
+            show_simple_modal('Bot Details', msg_body);
+        }
+        else
+        {
+            // an edge has been clicked
         }
 
-        if (bot_info['internal_queue'] !== undefined) {
-          var internal_queue = internal_queue_element.insertRow();
-          var cell0 = internal_queue.insertCell(0);
-          cell0.innerHTML = 'internal-queue'
-
-          var cell1 = internal_queue.insertCell(1);
-          cell1.innerHTML = bot_info['internal_queue']
-        }
-
-        var dst_queues = [];
-        for (index in bot_info['destination_queues']) {
-            dst_queues.push(bot_info['destination_queues'][index]);
-        }
-
-        dst_queues.sort();
-
-        for (index in dst_queues) {
-            var destination_queue = destination_queues_element.insertRow();
-
-            var cell0 = destination_queue.insertCell(0);
-            cell0.innerHTML = dst_queues[index][0];
-
-            var cell1 = destination_queue.insertCell(1);
-            cell1.innerHTML = dst_queues[index][1];
-
-        }
-    }
-}
-
-function load_bot_log() {
-    $('#logs-panel-title').addClass('waiting');
-    
-    var number_of_lines = LOAD_X_LOG_LINES;
-    
-    var bot_id = document.getElementById('monitor-target').innerHTML;
-    var level = document.getElementById('log-level-indicator').value;
-        
-    $.getJSON(MANAGEMENT_SCRIPT + '?scope=log&id=' + bot_id + '&lines=' + number_of_lines + '&level=' + level)
-        .done(function (data) {
-            bot_logs = data;
-            redraw_logs();
-            $('#logs-panel-title').removeClass('waiting');
-        })
-        .fail(function (err1, err2, errMessage) {
-            bot_logs = {};
-            redraw_logs();
-            $('#logs-panel-title').removeClass('waiting');
-        });
-}
-
-function load_bot_queues() {
-    $('#queues-panel-title').addClass('waiting');
-    
-    var bot_id = document.getElementById('monitor-target').innerHTML;
-    
-    $.getJSON(MANAGEMENT_SCRIPT + '?scope=queues')
-        .done(function (data) {
-            bot_queues = data;
-            redraw_queues();
-            $('#queues-panel-title').removeClass('waiting');
-        })
-        .fail(function (err1, err2, errMessage) {
-            show_error('Error loading bot queues information: ' + errMessage);
-        });    
-}
-
-function select_bot(bot_id) {    
-    if(reload_queues != null) {
-        clearInterval(reload_queues);
-    }
-    
-    if(reload_logs != null) {
-        clearInterval(reload_logs);
-    }
-    
-    document.getElementById('monitor-target').innerHTML = bot_id;
-    load_bot_queues();
-    
-    reload_queues = setInterval(function () {
-        load_bot_queues();
-    }, RELOAD_QUEUES_EVERY * 1000);
-
-    if(bot_id != ALL_BOTS) {
-        $("#logs-panel").css('display', 'block');
-        $("#source-queue-table-div").css('display', 'block');
-        $("#internal-queue-table-div").css('display', 'block');
-        $("#destination-queues-table-div").removeClass('col-md-12');
-        $("#destination-queues-table-div").addClass('col-md-4');
-        $("#destination-queue-header").html("Destination Queue");
-
-        load_bot_log();
-        reload_logs = setInterval(function () {
-            load_bot_log();
-        }, RELOAD_LOGS_EVERY * 1000);
-    } else {
-        $("#logs-panel").css('display', 'none');
-        $("#source-queue-table-div").css('display', 'none');
-        $("#internal-queue-table-div").css('display', 'none');
-        $("#destination-queues-table-div").removeClass('col-md-4');
-        $("#destination-queues-table-div").addClass('col-md-12');
-        $("#destination-queue-header").html("Queue");
-    }
-}
-
-function show_extended_message(index) {
-    var modal_body = document.getElementById('modal-body');
-    
-    var message = bot_logs[index]['message'];
-    
-    if (bot_logs[index]['extended_message']) {
-        message += '<br>\n' + 
-                    bot_logs[index]['extended_message'].replace(/\n/g, '<br>\n').replace(/ /g, '&nbsp;');
-    }
-                           
-    modal_body.innerHTML = message;
-}
-
-$.getJSON(MANAGEMENT_SCRIPT + '?scope=botnet&action=status')
-    .done(function (data) {
-        var sidemenu = document.getElementById('side-menu');
-        
-        var li_element = document.createElement('li');
-        var link_element = document.createElement('a');
-        link_element.innerHTML = ALL_BOTS;
-        link_element.setAttribute('href', '#');
-        link_element.setAttribute('onclick', 'select_bot("' + ALL_BOTS + '"); return false');
-            
-        li_element.appendChild(link_element);
-        sidemenu.appendChild(li_element);        
-        
-        var bots_ids = Object.keys(data);
-        bots_ids.sort();
-        
-        for (index in bots_ids) {
-            var bot_id = bots_ids[index];
-            li_element = document.createElement('li');
-            link_element = document.createElement('a');
-            
-            link_element.innerHTML = bot_id;
-            link_element.setAttribute('href', '#');
-            link_element.setAttribute('onclick', 'select_bot("' + bot_id + '"); return false');
-            
-            li_element.appendChild(link_element);
-            sidemenu.appendChild(li_element);
-        }
-    })
-    .fail(function (err1, err2, errMessage) {
-        show_error('Error loading botnet status: ' + errMessage);
     });
-    
-select_bot(ALL_BOTS);
+}
+
+function refresh_chart(agent_id)
+{
+    var chart_nodes;
+    var chart_edges;
+
+    $('#chart_refresh_button_'+agent_id+'').hide();
+    $('#chart_panel_title_'+agent_id).addClass('waiting');
+
+    load_file(agent_id, 'defaults',
+        function (data)
+        {
+            agents[agent_id].defaults = read_defaults_conf(data);
+
+            load_file(agent_id, 'runtime',
+                function (data)
+                {
+                    agents[agent_id].runtime = data;
+                    chart_nodes = read_runtime_conf(agents[agent_id].runtime);
+
+                    load_file(agent_id, 'pipeline',
+                        function (data)
+                        {
+                            agents[agent_id].pipeline = data;
+
+                            chart_edges = read_pipeline_conf(agents[agent_id].pipeline, chart_nodes);
+                            chart_nodes = add_defaults_to_nodes(chart_nodes, agents[agent_id].defaults);
+
+                            get_botnet_queues(agent_id,
+                                function (data)
+                                {
+
+                                    agents[agent_id].queues={};
+
+                                    $.each(data, function(bot_id, queues) {
+
+                                        agents[agent_id].queues[bot_id]={};
+
+                                        if (queues['internal_queue']!=undefined)
+                                        {
+                                            agents[agent_id].queues[bot_id]['internal'] = queues['internal_queue'];
+                                        }
+                                        else
+                                        {
+                                            agents[agent_id].queues[bot_id]['internal'] = 0;
+                                        }
+
+                                        if (queues['destination_queues']!=undefined)
+                                        {
+                                            agents[agent_id].queues[bot_id]['destination']={};
+
+                                            $.each(queues['destination_queues'] , function( i, queue )
+                                            {
+                                                agents[agent_id].queues[bot_id]['destination'][queue[0]]=queue[1];
+                                            });
+                                        }
+                                        else
+                                        {
+                                            agents[agent_id].queues[bot_id]['destination'] = {};
+                                        }
+
+                                        if (queues['source_queue']!=undefined)
+                                        {
+                                            agents[agent_id].queues[bot_id]['source']={};
+
+                                            agents[agent_id].queues[bot_id]['source'][queues['source_queue'][0]] = queues['source_queue'][1];
+
+                                        }
+                                        else
+                                        {
+                                            agents[agent_id].queues[bot_id]['source'] = {};
+                                        }
+
+                                    });
+
+                                    get_botnet_status(agent_id,
+                                        function (data)
+                                        {
+                                            agents[agent_id].status = data;
+                                            if (USE_AGENTS)
+                                            {
+                                                get_botnet_stats(agent_id,
+                                                    function (data) {
+                                                        agents[agent_id].stats = data;
+
+                                                        update_chart(agent_id, chart_nodes, chart_edges);
+                                                        $('#chart_refresh_button_'+agent_id+'').show();
+                                                        $('#chart_panel_title_'+agent_id).removeClass('waiting');
+
+                                                    },
+                                                    function(error){
+                                                        $('#chart_refresh_button_'+agent_id+'').show();
+                                                        $('#chart_panel_title_'+agent_id).removeClass('waiting');
+                                                        show_error(error);
+                                                    }
+                                                );
+                                            }
+                                            else
+                                            {
+                                                update_chart(agent_id, chart_nodes, chart_edges);
+                                            }
+                                        },
+                                        function(error){
+                                            $('#chart_refresh_button_'+agent_id+'').show();
+                                            $('#chart_panel_title_'+agent_id).removeClass('waiting');
+                                            show_error(error);
+                                        }
+                                    );
+                                },
+                                function(error){
+                                    $('#chart_refresh_button_'+agent_id+'').show();
+                                    $('#chart_panel_title_'+agent_id).removeClass('waiting');
+                                    show_error(error);
+                                }
+                            );
+                        },
+                        function(error){
+                            $('#chart_refresh_button_'+agent_id+'').show();
+                            $('#chart_panel_title_'+agent_id).removeClass('waiting');
+                            show_error(error);
+                        }
+                    );
+                },
+                function(error){
+                    $('#chart_refresh_button_'+agent_id+'').show();
+                    $('#chart_panel_title_'+agent_id).removeClass('waiting');
+                    show_error(error);
+                }
+            );
+        },
+        function(error){
+            $('#chart_refresh_button_'+agent_id+'').show();
+            $('#chart_panel_title_'+agent_id).removeClass('waiting');
+            show_error(error);
+        }
+    );
+}
+
+function refresh_charts()
+{
+    $.each(agents, function(agent_id, agent) {
+        if (agents[agent_id].visible) {
+            refresh_chart(agent_id);
+        }
+        else
+        {
+        }
+    });
+
+}
+
+
+function update_chart(agent, nodes, edges)
+{
+    if (agents[agent].chart == undefined)
+    {
+
+        // create the chart
+        create_chart(agent, convert_nodes(agent, nodes), convert_edges(agent, edges));
+        agents[agent].chart.network.redraw();
+        agents[agent].chart.network.fit();
+    }
+    else
+    {
+
+        agents[agent].chart.data.nodes.update(convert_nodes(agent, nodes));
+        agents[agent].chart.data.edges.update(convert_edges(agent, edges));
+        agents[agent].chart.network.redraw();
+    }
+
+}
+
+function set_tile(tile_type)
+{
+    selected_tile=tile_type;
+
+    $('.chart_place').each(
+        function (i, element){
+            $(element).removeClass().addClass(tiles[tile_type].classes);
+            $(element).height(($(window).height()-$('#header_nav').height()-(10*tiles[selected_tile].num_rows))/tiles[selected_tile].num_rows + 'px');
+        }
+    );
+}
+
+function create_chart_place(agent)
+{
+    $('#charts').append('' +
+        '<div class="'+ tiles[selected_tile].classes +'" style="padding:5px; height:'+ ($(window).height()-$('#header_nav').height()-(10*tiles[selected_tile].num_rows))/tiles[selected_tile].num_rows +'px;" id="chart_div_'+agent+'">' +
+        '   <div class="panel panel-default" style="height:100%;">' +
+        '       <div id="chart_panel_title_'+agent+'" class="panel-heading" style="padding-bottom:5px; padding-top: 5px; padding-left:10px;">' +
+        '           <b>' + agents[agent].name + '</b>' +
+        '           <span id="chart_refresh_button_'+agent+'" class="chart_refresh_button pull-right btn btn-xs btn-default"><i class="fa fa-repeat fa-fw"></i></span>'+
+        '           <span style="display:none;" id="chart_loader_button_'+agent+'" class="chart_loader_button pull-right btn btn-xs btn-default"><i class="fa fa-spinner fa-fw"></i></span>'+
+        '       </div> ' +
+        '       <div id="chart_panel_body_'+agent+'" class="panel-body" style="height:100%; padding:0px; padding-bottom:30px;">' +
+        '           <div id="chart_'+agent+'" style="height:100%;">' +
+        '           </div> ' +
+        '       </div> ' +
+        '   </div>' +
+        '</div>'
+    );
+    agents[agent].div_place=$('#charts #chart_div_' + agent);
+    agents[agent].chart_place=$('#charts #chart_' + agent);
+
+    $('#chart_refresh_button_'+agent).click(function(e, item){
+        refresh_chart(agent);
+    });
+
+}
+
+function update_agent_multi_selector(agent_list)
+{
+    $(agent_list).each(function(index, agent)
+    {
+        agents[agent.id] = {visible: true, div_place:null, chart_place: null, name: agent.name, chart: null, defaults: null, pipeline:null, runtime:null, stats:null, logs:null};
+
+        create_chart_place(agent.id);
+
+        if(agent.id==get_selected_agent())
+        {
+            $('#agent_multi_selector').append('' +
+                '<label class="btn btn-sm btn-default active" data-agent_id="'+agent.id+'">' +
+                '   <input class="agent_checkbox" type="checkbox" checked autocomplete="off" >' +
+                '   <span class="agent_name">'+agent.name+'</span>' +
+                '</label>'
+            );
+
+        }
+        else
+        {
+            $('#agent_multi_selector').append('' +
+                '<label class="btn btn-sm btn-default" data-agent_id="'+agent.id+'">' +
+                '   <input class="agent_checkbox" type="checkbox" autocomplete="off" >' +
+                '   <span class="agent_name">'+agent.name+'</span>' +
+                '</label>'
+            );
+        }
+
+    });
+
+    update_charts_display();
+    refresh_charts();
+
+    $(".agent_checkbox").change(function(){
+        if ($(this).is(':checked'))
+        {
+            agents[$(this).parent().data('agent_id')].visible=true;
+            agents[$(this).parent().data('agent_id')].div_place.show();
+
+        }
+        else
+        {
+            agents[$(this).parent().data('agent_id')].visible=false;
+            agents[$(this).parent().data('agent_id')].div_place.hide();
+        }
+    });
+}
+
+function update_charts_display()
+{
+    $('#agent_multi_selector label').each(
+        function(index, element)
+        {
+            var agent = $(element).data('agent_id');
+
+            if ($(element).hasClass("active")) {
+                agents[agent].visible=true;
+                $(agents[agent].div_place).show();
+            }
+            else
+            {
+                agents[agent].visible=false;
+                $(agents[agent].div_place).hide();
+            }
+        }
+    );
+}
+
+function update_reload_seconds()
+{
+    if (NEXT_RELOAD_SECONDS > 0)
+    {
+        $('#refresh_charts').html("Refresh Now ("+NEXT_RELOAD_SECONDS+")");
+        NEXT_RELOAD_SECONDS--;
+    }
+    else
+    {
+        $('#refresh_charts').html("Refresh Now");
+        NEXT_RELOAD_SECONDS = RELOAD_CHARTS_EVERY;
+        refresh_charts();
+    }
+}
+
+/* Things to do on document ready */
+
+$(document).ready(function() {
+
+    get_main_configs(
+        function()
+        {
+            // Everything should be done only after the main configs are successfully retrieved
+
+            $("#check_all_agents").click(function(){
+                $('#agent_multi_selector label').addClass('active');
+                update_charts_display();
+            });
+
+            $("#uncheck_all_agents").click(function(){
+                $('#agent_multi_selector label').removeClass('active');
+                update_charts_display();
+            });
+
+            $("#refresh_charts").click(
+                function()
+                {
+                    update_charts_display();
+                    refresh_charts();
+                    NEXT_RELOAD_SECONDS = RELOAD_CHARTS_EVERY;
+                }
+            );
+
+            // update agent list dropdown if (USE_AGENTS)
+            if (USE_AGENTS)
+            {
+                get_agents(
+                    function(data) {
+                        update_agent_multi_selector(data);
+                    },
+                    function(error){
+                        show_error(error);
+                    }
+                );
+            }
+            else
+            {
+                update_agent_multi_selector([{id:0, name:'( Local IntelMQ Instance )'}]);
+            }
+
+            // interval to update charts
+            setInterval(function(){
+                update_reload_seconds();
+            },1000);
+
+            // Dynamically adapt to fit screen
+            window.onresize = resize;
+
+        },
+        show_error
+    );
+
+});
+
+

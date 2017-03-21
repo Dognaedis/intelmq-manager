@@ -17,6 +17,17 @@ $(window).on('unload', function() {
     return "If you have not saved your work you'll loose the changes you have made. Do you want to continue?";
 });
 
+function create_save_configuration_binding()
+{
+    $('.vis-saveConfiguration').click(function(){ save_data_on_files();});
+}
+
+function create_clear_configuration_binding()
+{
+    $('.vis-clearConfiguration').click(function(){ window.location.assign('#new');});
+}
+
+
 function resize() {
     // Resize body
     var graph_container = document.getElementById('graph-container');
@@ -26,9 +37,8 @@ function resize() {
     
     if (graph != null && graph != undefined) {
         graph.redraw();
-        graph.zoomExtent();
+        graph.fit();
     }
-    
     load_html_elements();
 }
 
@@ -40,22 +50,11 @@ function load_html_elements() {
     table = document.getElementById("graph-popUp-fields");
 }
 
-function load_file(url, callback) {
-    $.getJSON(url)
-        .done(function (json) {
-            callback(json);
-        })
-        .fail(function (jqxhr, textStatus, error) {
-            var err = textStatus + ", " + error;
-            show_error('Failed to obtain JSON: ' + url + ' with error: ' + err);
-            callback({});
-        });
-}
 
 function load_bots(config) {
     var available_bots = document.getElementById("side-menu")
     //available_bots.innerHTML = '';
-    
+
     for(bot_group in config) {
         var group = config[bot_group];
         
@@ -110,7 +109,7 @@ function load_bots(config) {
     $('#side-menu').metisMenu({'restart': true});
 
     if (window.location.hash != '#new') {
-        load_file(DEFAULTS_FILE, load_defaults);
+        load_file(get_selected_agent(), 'defaults', load_defaults, show_error);
     } else {
         draw();
         resize();
@@ -119,44 +118,43 @@ function load_bots(config) {
 
 function load_defaults(config) {
     defaults = read_defaults_conf(config);
-        
-    load_file(RUNTIME_FILE, load_runtime);
+    load_file(get_selected_agent(), 'runtime', load_runtime, show_error);
 }
 
 function load_runtime(config) {
     nodes = read_runtime_conf(config);
-        
-    load_file(PIPELINE_FILE, load_pipeline);
+    load_file(get_selected_agent(), 'pipeline', load_pipeline, show_error);
 }
 
 function load_pipeline(config) {
     edges = read_pipeline_conf(config, nodes);
     nodes = add_defaults_to_nodes(nodes, defaults);
-        
     draw();
     resize();
 }
 
 function save_data_on_files() {
-    if(!confirm("By clicking 'OK' you are replacing the configuration in your files by the one represented by the graph on this page. Do you agree?")) {
-        return;
-    }
+    $.confirm({
+        title: 'Save Configuration',
+        content: "By clicking 'OK' you are replacing the configuration in your files by the one represented by the graph on this page. Do you agree?",
+        type: 'blue',
+        buttons: {
+            confirm: function () {
+                submit_save_data_on_files()
+            },
+            cancel: function () {
 
+            }
+        }
+    });
+
+}
+
+function submit_save_data_on_files() {
     nodes = remove_defaults(nodes, defaults);
-    
-    var alert_error = function (file, jqxhr, textStatus, error) {
-        show_error('There was an error saving ' + file + ':\nStatus: ' + textStatus + '\nError: ' + error);
-    }
 
-    $.post('./php/save.php?file=runtime', generate_runtime_conf(nodes))
-        .fail(function (jqxhr, textStatus, error) {
-            alert_error('runtime', jqxhr, textStatus, error);
-        });
-        
-    $.post('./php/save.php?file=pipeline', generate_pipeline_conf(edges))
-        .fail(function (jqxhr, textStatus, error) {
-            alert_error('pipeline', jqxhr, textStatus, error);
-        });
+    save_file(get_selected_agent(), 'runtime', generate_runtime_conf(nodes), function(){}, show_error);
+    save_file(get_selected_agent(), 'pipeline', generate_pipeline_conf(edges), function(){}, show_error);
 
     nodes = add_defaults_to_nodes(nodes, defaults);
 }
@@ -169,7 +167,10 @@ function convert_edges(edges) {
         new_edge.id = edges[index]['id'];
         new_edge.from = edges[index]['from'];
         new_edge.to = edges[index]['to'];
-        
+        new_edge.arrows = {to:{scaleFactor:1}};
+        new_edge.width = 3;
+        new_edge.color = '#888888';
+        new_edge.font = {align: 'horizontal'};
         new_edges.push(new_edge);
     }
     
@@ -184,8 +185,7 @@ function convert_nodes(nodes) {
         new_node.id = nodes[index]['id'];
         new_node.label = nodes[index]['id'];
         new_node.group = nodes[index]['group'];
-        new_node.title = JSON.stringify(nodes[index], undefined, 2).replace(/\n/g, '\n<br>').replace(/ /g, "&nbsp;");
-        
+        new_node.details = JSON.stringify(nodes[index], undefined, 2).replace(/\n/g, '\n<br>').replace(/ /g, "&nbsp;");
         new_nodes.push(new_node);
     }
     
@@ -263,29 +263,50 @@ function saveData(data,callback) {
     
     if (oldIdInput != undefined) {
         if (idInput.value != oldIdInput.value) {
-            if(!confirm("When you edit an ID what you are doing in fact is to create a clone of the current bot. You will have to delete the old one manually. Proceed with the operation?")) {
-                return;
-            }
+
+            $.confirm({
+                title: 'Edit Bot ID',
+                content: "When you edit an ID what you are doing in fact is to create a clone of the current bot. You will have to delete the old one manually. Proceed with the operation?",
+                type: 'blue',
+                buttons: {
+                    confirm: function () {
+                        submit_save_data(data, callback);
+                    },
+                    cancel: function () {
+                    }
+                }
+            });
+
+            return;
         }
     }
-    
+
+    submit_save_data(data, callback);
+
+}
+
+function submit_save_data(data, callback)
+{
+    var idInput = document.getElementById('node-id');
+    var groupInput = document.getElementById('node-group');
+
     data.id = idInput.value;
     data.group = groupInput.value;
     //data.level = GROUP_LEVELS[data.group];
-    
+
     if (!BOT_ID_REGEX.test(data.id)) {
         show_error("Bot ID's can only be composed of numbers, letters and hiphens");
         return;
     }
-    
-    node = {};
-    
+
+    var node = {};
+
     var inputs = document.getElementsByTagName("input");
     for(var i = 0; i < inputs.length; i++) {
         if(inputs[i].id.indexOf('node-') == 0) {
             var key = inputs[i].id.replace('node-', '');
             var value = null;
-            
+
             try {
                 value = JSON.parse(inputs[i].value);
             } catch (err) {
@@ -294,16 +315,17 @@ function saveData(data,callback) {
             node[key] = value;
         }
     }
-    
+
     data.label = node['id'];
-    
+
     data.title = JSON.stringify(node, undefined, 2).replace(/\n/g, '\n<br>').replace(/ /g, "&nbsp;");
-    
+
     nodes[data.id] = node;
 
     clearPopUp();
     callback(data);
 }
+
 
 function create_form(title, data, callback){
     span.innerHTML = title;
@@ -353,129 +375,248 @@ function draw() {
     }
 
     var options = {
-        physics: {
-            barnesHut: {
-                enabled: false
-            }, 
-            repulsion: {
-                nodeDistance: 200,
-                springLength: 200
-            }
-        },
-        tooltip: {
-            fontFace: 'arial',
-            delay: 1000
+        layout:{
+            randomSeed:0,
+            improvedLayout:true,
+            hierarchical:{
+                sortMethod:"hubsize",
+                direction:"DU",
+                parentCentralization: true,
+                nodeSpacing:300,
+            },
         },
         nodes: {
-            fontFace: 'arial'
+            labelHighlightBold: false,
+            font: {
+                face: 'arial',
+                size: 18,
+            },
+            shadow:{
+                color: 'rgba(0,0,0,1)',
+                size:4,
+                x: 0,
+                y: 1
+            },
+            borderWidth:2,
         },
         edges: {
-            fontFace: 'arial',
-            length: 500,
+            smooth: {
+            "type": "discrete",
+            "forceDirection": "none",
+            "roundness": 0.3},
+            length: 300,
+            shadow:true,
+            arrowStrikethrough: false,
+            arrows: {to:{scaleFactor:1}},
             width: 3,
-            style: 'arrow',
-            arrowScaleFactor: 0.5
+            color: "'#888888"
         },
         groups: {
             Collector: {
-//                shape: 'circle',
                 shape: 'box',
-                color: GROUP_COLORS['Collector'],
+                color:{
+                    background:'#FF4444',
+                    border:'#FF4444',
+                    highlight:{
+                        background:'#EE3333',
+                        border:'#333333',
+                    },
+                    hover:{
+                        background:'#DD2222',
+                        border:'#DD2222'
+                    }
+                },
+                font:{
+                    color:'#000000'
+                }
             },
             Parser: {
-//                shape: 'ellipse',
                 shape: 'box',
-                color: GROUP_COLORS['Parser']
+                color:{
+                    background:'#44EE44',
+                    border:'#44EE44',
+                    highlight:{
+                        background:'#33DD33',
+                        border:'#333333',
+                    },
+                    hover:{
+                        background:'#22CC22',
+                        border:'#22CC22'
+                    }
+                },
+                font:{
+                    color:'#000000'
+                }
             },
             Expert: {
                 shape: 'box',
-                color: GROUP_COLORS['Expert'],
-                fontColor: "#FFFFFF"
+                color:{
+                    background:'#44AAFF',
+                    border:'#44AAFF',
+                    highlight:{
+                        background:'#3399EE',
+                        border:'#333333',
+                    },
+                    hover:{
+                        background:'#2288DD',
+                        border:'#2288DD'
+                    }
+                },
+                font:{
+                    color:'#000000'
+                }
             },
             Output: {
-//                shape: 'database',
                 shape: 'box',
-                color: GROUP_COLORS['Output']
+                color:{
+                    background:'#EEEE44',
+                    border:'#EEEE44',
+                    highlight:{
+                        background:'#DDDD44',
+                        border:'#333333',
+                    },
+                    hover:{
+                        background:'#CCCC22',
+                        border:'#CCCC22'
+                    }
+                },
+                font:{
+                    color:'#000000',
+                }
             }
         },
-        stabilize: false,
-        dataManipulation: {
+        manipulation: {
             enabled: true,
-            initiallyVisible: true
-        },
-        navigation: true,
-        onAdd: function(data,callback) {
-            create_form("Add Node", data, callback);            
-        },
-        onEdit: function(data,callback) {
-            create_form("Edit Node", data, callback);
-            fill_bot(data.id, undefined, undefined);
-        },
-        onConnect: function(data,callback) {
-            if (data.from == data.to) {
-                show_error('This action would cause an infinite loop');
-                return;
-            }
-            
-            for (index in edges) {
-                if (edges[index].from == data.from && edges[index].to == data.to) {
-                    show_error('There is already a link between those bots');
+            initiallyActive: false,
+            addNode: function(data,callback) {
+                create_form("Add Node", data, callback);
+            },
+            editNode: function(data,callback) {
+                create_form("Edit Node", data, callback);
+                fill_bot(data.id, undefined, undefined);
+            },
+            addEdge: function(data,callback) {
+                if (data.from == data.to) {
+                    show_error('This action would cause an infinite loop.');
                     return;
                 }
-            }
-            
-            var neighbors = ACCEPTED_NEIGHBORS[nodes[data.from].group];
-            var available_neighbor = false;
-            for (index in neighbors) {
-                if (nodes[data.to].group == neighbors[index]) {
-                    callback(data);
-                    available_neighbor = true;
-                }
-            }
-            
-            if (!available_neighbor) {
-                if (neighbors.length == 0) {
-                    show_error("Node type " + nodes[data.from].group + " can't connect to other nodes");
-                } else {
-                    show_error('Node type ' + nodes[data.from].group + ' can only connect to nodes of types: ' + neighbors.join());
-                }
-                return;
-            }
 
-            
-            if (edges[data.id] === undefined) {
-                edges[data.id] = {};
-            }
-            
-            edges[data.id]={'from': data.from, 'to': data.to};
+                for (index in edges) {
+                    if (edges[index].from == data.from && edges[index].to == data.to) {
+                        show_error('There is already a link between those bots.');
+                        return;
+                    }
+                }
+
+                var neighbors = ACCEPTED_NEIGHBORS[nodes[data.from].group];
+                var available_neighbor = false;
+                for (index in neighbors) {
+                    if (nodes[data.to].group == neighbors[index]) {
+                        callback(data);
+                        available_neighbor = true;
+                    }
+                }
+
+                if (!available_neighbor) {
+                    if (neighbors.length == 0) {
+                        show_error("Node type " + nodes[data.from].group + " can't connect to other nodes");
+                    } else {
+                        show_error('Node type ' + nodes[data.from].group + ' can only connect to nodes of types: ' + neighbors.join());
+                    }
+                    return;
+                }
+
+
+                if (edges[data.id] === undefined) {
+                    edges[data.id] = {};
+                }
+
+                edges[data.id]={'from': data.from, 'to': data.to};
+            },
+            deleteNode: function(data, callback){
+                callback(data);
+
+                for (index in data.edges) {
+                    delete edges[data.edges[index]];
+                }
+
+                for (index in data.nodes) {
+                    delete nodes[data.nodes[index]];
+                }
+            },
+            deleteEdge: function(data, callback){
+                callback(data);
+
+                for (index in data.edges) {
+                    delete edges[data.edges[index]];
+                }
+
+                for (index in data.nodes) {
+                    delete nodes[data.nodes[index]];
+                }
+            },
+
+
         },
-        onDelete: function(data,callback) {
-            callback(data);
-            
-            for (index in data.edges) {
-                delete edges[data.edges[index]];
-            }
-            
-            for (index in data.nodes) {
-                delete nodes[data.nodes[index]];
-            }
-        }
-    };
-    
-    graph = new vis.Graph(graph_container, data, options);
+        interaction: {
+            hover:true,
+            navigationButtons: true,
+        },
 
+    };
+
+    graph = new vis.Network(graph_container, data, options);
+
+    graph.on("click", function (params) {
+
+        if (params.nodes[0]!=undefined)
+        {
+            msg_body=this.body.nodes[params.nodes[0]].options.details;
+            show_simple_modal('Bot Details', msg_body);
+        }
+        else
+        {
+            // an edge has been clicked
+        }
+
+    });
+    
     setTimeout(function () {
-        graph.zoomExtent();
+    //    graph.fit();
     }, 2000);
 }
 
-/*
- * Application entry point
- */
+$(document).ready(function() {
 
-// Dynamically load available bots
-load_file(BOTS_FILE, load_bots);
+    get_main_configs(
+        function()
+        {
+            // Everything should be done only after the main configs are successfully retrieved
 
-// Dynamically adapt to fit screen
-window.onresize = resize; 
+            // Dynamically load available bots
+            load_file(get_selected_agent(), 'bots', load_bots);
+
+            // Dynamically adapt to fit screen
+            window.onresize = resize;
+
+            // update agent list dropdown if (USE_AGENTS)
+            if (USE_AGENTS)
+            {
+                $('#agent_selector_div').show();
+
+                get_agents(
+                    function(data) {
+                        update_agent_selector(data);
+                    },
+                    function(error){
+                        show_error(error);
+                    }
+                );
+            }
+        },
+        show_error
+    );
+
+});
+
 
