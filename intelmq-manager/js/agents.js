@@ -109,6 +109,7 @@ $(document).ready(function() {
             // update agent list dropdown if (USE_AGENTS)
             if (USE_AGENTS)
             {
+                $('#agent_selector_div').show();
 
                 get_agents(
                     function(data) {
@@ -119,11 +120,6 @@ $(document).ready(function() {
                     }
                 );
             }
-            else
-            {
-                $('#agent_selector_div').hide();
-            }
-
         },
         show_error
     );

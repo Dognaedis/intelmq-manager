@@ -260,34 +260,13 @@ function select_bot(bot_id) {
     {
         load_bot_stats();
     }
-    else
-    {
-        $('#stats_table_body').empty().append('' +
-            '<tr>' +
-            '   <td colspan="4" style="text-align:center;">' +
-            '       <br><p> The Bot statistics are only available when the <b>IntelMQ Manager</b> is configured to use botnet agents.<br><br>To enable it, please define the "<b>USE_BOTNET_AGENTS</b>" as "<b>true</b>" in the main config.</p>' +
-            '   </td>' +
-            '</tr>'
-        );
-    }
-    
+
     reload_queues = setInterval(function () {
         load_bot_queues();
         if (USE_AGENTS)
         {
             load_bot_stats();
         }
-        else
-        {
-            $('#stats_table_body').empty().append('' +
-                '<tr>' +
-                '   <td colspan="4" style="text-align:center;">' +
-                '       <br><p> The Bot statistics are only available when the <b>IntelMQ Manager</b> is configured to use botnet agents.<br><br>To enable it, please define the "<b>USE_BOTNET_AGENTS</b>" as "<b>true</b>" in the main config.</p>' +
-                '   </td>' +
-                '</tr>'
-            );
-        }
-
     }, RELOAD_QUEUES_EVERY * 1000);
 
     if(bot_id != ALL_BOTS) {
@@ -370,6 +349,8 @@ $(document).ready(function() {
             // update agent list dropdown if (USE_AGENTS)
             if (USE_AGENTS)
             {
+                $('#stats_div').show();
+                $('#agent_selector_div').show();
 
                 get_agents(
                     function(data) {
@@ -380,15 +361,10 @@ $(document).ready(function() {
                     }
                 );
             }
-            else
-            {
-                $('#agent_selector_div').hide();
-            }
 
             select_bot(ALL_BOTS);
 
             get_botnet_status(get_selected_agent(), update_bot_list, show_error);
-
 
         },
         show_error

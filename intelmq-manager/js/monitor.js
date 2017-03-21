@@ -10,7 +10,6 @@ var span = null;
 var table = null;
 
 var agents = {};
-//{chart: null, pipeline:null, runtime:null, stats:null, logs:null};
 
 var tiles={
     "1":{   classes: "chart_place col-md-12",
@@ -373,7 +372,8 @@ function refresh_chart(agent_id)
     var chart_nodes;
     var chart_edges;
 
-    $('#chart_refresh_button_'+agent_id+' i').removeClass('fa-repeat').addClass('fa-spinner');
+    $('#chart_refresh_button_'+agent_id+'').hide();
+    $('#chart_panel_title_'+agent_id).addClass('waiting');
 
     load_file(agent_id, 'defaults',
         function (data)
@@ -452,9 +452,15 @@ function refresh_chart(agent_id)
                                                         agents[agent_id].stats = data;
 
                                                         update_chart(agent_id, chart_nodes, chart_edges);
-                                                        $('#chart_refresh_button_'+agent_id+' i').removeClass('fa-spinner').addClass('fa-repeat');
+                                                        $('#chart_refresh_button_'+agent_id+'').show();
+                                                        $('#chart_panel_title_'+agent_id).removeClass('waiting');
+
                                                     },
-                                                    show_error
+                                                    function(error){
+                                                        $('#chart_refresh_button_'+agent_id+'').show();
+                                                        $('#chart_panel_title_'+agent_id).removeClass('waiting');
+                                                        show_error(error);
+                                                    }
                                                 );
                                             }
                                             else
@@ -462,19 +468,39 @@ function refresh_chart(agent_id)
                                                 update_chart(agent_id, chart_nodes, chart_edges);
                                             }
                                         },
-                                        show_error
+                                        function(error){
+                                            $('#chart_refresh_button_'+agent_id+'').show();
+                                            $('#chart_panel_title_'+agent_id).removeClass('waiting');
+                                            show_error(error);
+                                        }
                                     );
                                 },
-                                show_error
+                                function(error){
+                                    $('#chart_refresh_button_'+agent_id+'').show();
+                                    $('#chart_panel_title_'+agent_id).removeClass('waiting');
+                                    show_error(error);
+                                }
                             );
                         },
-                        show_error
+                        function(error){
+                            $('#chart_refresh_button_'+agent_id+'').show();
+                            $('#chart_panel_title_'+agent_id).removeClass('waiting');
+                            show_error(error);
+                        }
                     );
                 },
-                show_error
+                function(error){
+                    $('#chart_refresh_button_'+agent_id+'').show();
+                    $('#chart_panel_title_'+agent_id).removeClass('waiting');
+                    show_error(error);
+                }
             );
         },
-        show_error
+        function(error){
+            $('#chart_refresh_button_'+agent_id+'').show();
+            $('#chart_panel_title_'+agent_id).removeClass('waiting');
+            show_error(error);
+        }
     );
 }
 

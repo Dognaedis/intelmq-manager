@@ -2,8 +2,8 @@
 
 
     // WHETHER TO USE AGENTS FOR CONFIG FILES AND COMUNICATION WITH THE intelmqctl.
-    define("USE_BOTNET_AGENTS", True); // Operations are sent directly to the to the intelmqctl.
-    //define("USE_BOTNET_AGENTS", True); // Operations are sent to the intelmqctl through botnet agents.
+    //define("USE_BOTNET_AGENTS", False); // Operations are sent directly to the to the intelmqctl.
+    define("USE_BOTNET_AGENTS", True); // Operations are sent to the intelmqctl through botnet agents.
 
     define("DEBUG_API", True); // Output some debug on the webserver error console.
 
