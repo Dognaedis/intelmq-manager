@@ -19,7 +19,8 @@
     function send_http_response($data, $http_error=200)
     {
         header($http_error);
-        error_log("### RESPONSE: ". json_encode($data));
+        error_log("[SENDING RESPONSE]");
+        error_log("[SENDING OK (200)]: ". json_encode($data));
         die(json_encode($data));
     }
 

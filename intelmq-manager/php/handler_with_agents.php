@@ -29,6 +29,7 @@
 
         if (DEBUG_API)
         {
+            error_log("[SENDING CURL REQUEST]");
             error_log("[CURL URL]: " . $url);
             error_log("[CURL POST DATA]: " . http_build_query($post_data));
         }
@@ -42,6 +43,7 @@
         {
             if (DEBUG_API)
             {
+                error_log("[GOT CURL RESPONSE]");
                 error_log("[CURL RESPONSE OK (".$http_code.")]: " . $output);
             }
             return $output;
@@ -50,6 +52,7 @@
         {
             if (DEBUG_API)
             {
+                error_log("[GOT CURL RESPONSE]");
                 error_log("[CURL RESPONSE ERROR (".$http_code.")]: " . $output);
             }
             return false;
@@ -199,8 +202,9 @@
 
         if (DEBUG_API)
         {
-            error_log("[REQUEST GET]: " . json_encode($_GET));
-            error_log("[REQUEST POST]: " . json_encode($_POST));
+            error_log("[HANDLING REQUEST]");
+            error_log("[REQUESTED GET DATA]: " . json_encode($_GET));
+            error_log("[REQUESTED POST DATA]: " . json_encode($_POST));
         }
 
         if (isset($_GET['operation']))
