@@ -154,17 +154,15 @@ function convert_nodes(agent, nodes)
 function create_chart(agent, nodes, edges) {
 
     var options = {
+        physics: {
+            barnesHut: {
+                gravitationalConstant: -4000
+            },
+            minVelocity: 0.75
+        },
         layout:{
             randomSeed:0,
             improvedLayout:true,
-            hierarchical:{
-                sortMethod:"hubsize",
-                direction:"DU",
-                //sortMethod:"directed",
-                //direction:"UD",
-                parentCentralization: false,
-                nodeSpacing:350
-            },
         },
         nodes: {
             labelHighlightBold: false,
@@ -182,10 +180,11 @@ function create_chart(agent, nodes, edges) {
         },
         edges: {
             smooth: {
-            "type": "discrete",
-            "forceDirection": "none",
-            "roundness": 0.3},
-            length: 300,
+                "type": "dynamic",
+                "forceDirection": "none",
+                "roundness": 0.9
+            },
+            length: 200,
             shadow:false,
             arrowStrikethrough: false,
 
@@ -347,6 +346,10 @@ function create_chart(agent, nodes, edges) {
     agents[agent].chart.network = new vis.Network(place, agents[agent].chart.data, options);
     //agents[agent].chart.network.fit();
 
+    agents[agent].chart.network.on("stabilizationIterationsDone", function () {
+        agents[agent].chart.network.setOptions( { physics: false } );
+    });
+
     agents[agent].chart.network.on("click", function (params) {
 
         if (params.nodes[0]!=undefined)
@@ -363,7 +366,6 @@ function create_chart(agent, nodes, edges) {
         {
             // an edge has been clicked
         }
-
     });
 }
 
