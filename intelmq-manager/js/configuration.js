@@ -375,15 +375,15 @@ function draw() {
     }
 
     var options = {
+        physics: {
+            barnesHut: {
+                gravitationalConstant: -4000
+            },
+            minVelocity: 0.75
+        },
         layout:{
             randomSeed:0,
             improvedLayout:true,
-            hierarchical:{
-                sortMethod:"hubsize",
-                direction:"DU",
-                parentCentralization: true,
-                nodeSpacing:300,
-            },
         },
         nodes: {
             labelHighlightBold: false,
@@ -401,11 +401,12 @@ function draw() {
         },
         edges: {
             smooth: {
-            "type": "discrete",
-            "forceDirection": "none",
-            "roundness": 0.3},
-            length: 300,
-            shadow:true,
+                "type": "dynamic",
+                "forceDirection": "none",
+                "roundness": 0.9
+            },
+            length: 200,
+            shadow:false,
             arrowStrikethrough: false,
             arrows: {to:{scaleFactor:1}},
             width: 3,
@@ -566,6 +567,11 @@ function draw() {
     };
 
     graph = new vis.Network(graph_container, data, options);
+
+    graph.on("stabilizationIterationsDone", function () {
+        graph.setOptions( { physics: false } );
+    });
+
 
     graph.on("click", function (params) {
 
