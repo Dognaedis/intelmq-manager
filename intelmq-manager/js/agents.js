@@ -3,6 +3,14 @@
 
 function populate_agents_table(agents)
 {
+    if (agents[0]===undefined)
+    {
+        var message="There are no registered agents.<br>Please add them using the form above.";
+        var alert_message="The agents list is empty.<br>Please add some using the form on this page.";
+        $('#agents-panel-body-div').append('<h5 style="text-align:center;">'+message+'</h5>');
+        show_simple_modal("No agents!", alert_message);
+    }
+
     $(agents).each(function(index, agent){
         row = $('<tr data-agent-id="'+agent.id+'">');
         row.append('<td nowrap>             <a href="#" class="agent_list_icon" data-agent-id="'+agent.id+'">'+(agent.id==get_selected_agent()?'<span class="fa fa-check"></span>':'')+'</a></td>');
@@ -60,6 +68,8 @@ function populate_agents_table(agents)
 
 $(document).ready(function() {
 
+    PAGE='agents';
+
     get_main_configs(
         function()
         {
@@ -68,7 +78,6 @@ $(document).ready(function() {
             if (USE_AGENTS) {
                 // update agent list
                 $('#agents-panel-title').addClass('waiting');
-
                 get_agents(
                     function (data) {
                         populate_agents_table(data);

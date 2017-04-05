@@ -122,7 +122,7 @@
                             <div id="source-queue-table-div" class="col-md-4">
                                 <table class="table">
                                     <thead>
-                                        <tr><th class="width-80">Source Queue</th><th class="width-20">Count</th></tr>
+                                    <tr><th class="width-80">Source Queue</th><th class="width-20">Count</th></tr>
                                     </thead>
                                     <tbody id="source-queue">
                                     </tbody>
@@ -131,7 +131,7 @@
                             <div id="internal-queue-table-div" class="col-md-4">
                                 <table class="table">
                                     <thead>
-                                        <tr><th class="width-80">Internal Queue</th><th class="width-20">Count</th></tr>
+                                    <tr><th class="width-80">Internal Queue</th><th class="width-20">Count</th></tr>
                                     </thead>
                                     <tbody id="internal-queue">
                                     </tbody>
@@ -140,9 +140,18 @@
                             <div id="destination-queues-table-div" class="col-md-4">
                                 <table class="table">
                                     <thead>
-                                        <tr><th class="width-80" id="destination-queue-header">Destination Queue</th><th class="width-20">Count</th></tr>
+                                    <tr><th class="width-80">Destination Queue</th><th class="width-20">Count</th></tr>
                                     </thead>
                                     <tbody id="destination-queues">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="all-queues-table-div" class="col-md-12">
+                                <table class="table">
+                                    <thead>
+                                    <tr><th class="width-80">Queues</th><th class="width-20">Count</th></tr>
+                                    </thead>
+                                    <tbody id="all-queues">
                                     </tbody>
                                 </table>
                             </div>
@@ -156,8 +165,8 @@
                             <h4 id="stats_panel_title">Statistics</h4>
                         </div>
                         <div class="panel-body">
-                            <div id="stats_table" class="col-md-12">
-                                <table class="table">
+                            <div id="stats_table_div" class="col-md-12">
+                                <table id="stats_table" class="table">
                                     <thead>
                                         <tr>
                                             <th style="width:40%">Bot</th>

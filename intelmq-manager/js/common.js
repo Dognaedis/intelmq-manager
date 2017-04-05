@@ -25,11 +25,14 @@ function show_simple_modal(title, body){
 
 function update_agent_selector(agents)
 {
+    var one_selected = false;
+
     $(agents).each(function(index, agent)
     {
         if(agent.id==get_selected_agent())
         {
             $('#agent_selector').append('<option value="'+agent.id+'" selected>'+agent.name+'</option>');
+            one_selected = true;
         }
         else
         {
@@ -43,6 +46,12 @@ function update_agent_selector(agents)
         e.preventDefault();
         return false;
     });
+
+    if ((!one_selected) && (agents[0].id!=undefined))
+    {
+        set_selected_agent(agents[0].id);
+        location.reload();
+    }
 }
 
 function set_selected_agent(id)
@@ -462,8 +471,17 @@ function get_agents(success, fail)
         {
             if (json.result=='ok')
             {
-                if (json.hasOwnProperty('data') && json.data.hasOwnProperty('agents')) {
-                    success(json.data.agents);
+
+                if (json.hasOwnProperty('data') && json.data.hasOwnProperty('agents'))
+                {
+                    if (json.data.agents[0]!==undefined || PAGE=='agents')
+                    {
+                        success(json.data.agents);
+                    }
+                    else
+                    {
+                        window.location='agents.html'
+                    }
                 }
                 else
                 {

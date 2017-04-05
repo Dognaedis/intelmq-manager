@@ -616,7 +616,7 @@ function update_agent_multi_selector(agent_list)
         {
             agents[$(this).parent().data('agent_id')].visible=true;
             agents[$(this).parent().data('agent_id')].div_place.show();
-
+            refresh_chart($(this).parent().data('agent_id'));
         }
         else
         {
@@ -694,6 +694,7 @@ $(document).ready(function() {
             {
                 get_agents(
                     function(data) {
+                        update_agent_selector(data);
                         update_agent_multi_selector(data);
                     },
                     function(error){

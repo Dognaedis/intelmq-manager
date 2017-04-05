@@ -8,17 +8,25 @@ var reload_queues = null;
 var reload_logs = null;
 
 
-$('#log-table').dataTable({
+var log_datatable = $('#log-table').DataTable({
     lengthMenu: [[5, 10, 25, -1], [5, 10, 25, "All"]],
     pageLength: 10,
     order: [0, 'desc'],
     columns: [
         { "data": "date" },
-        //{ "data": "bot_id" },
         { "data": "log_level" },
         { "data": "message" },
         { "data": "actions" }
-    ]
+    ],
+    autoWidth: true
+});
+
+var all_queues_datatable = $('#all-queues-table-div table').DataTable({
+    order: [[ 1, "desc" ],[0, "asc"]]
+});
+
+var stats_datatable = $('#stats_table').DataTable({
+        order: [[0, "asc"]]
 });
 
 window.onresize = function () {
@@ -36,11 +44,11 @@ function redraw() {
 }
 
 function redraw_logs() {
-    $('#log-table').dataTable().fnClearTable();
+    log_datatable.clear();
     
     if  (bot_logs == {}) {
-        $('#log-table').dataTable().fnAdjustColumnSizing();
-        $('#log-table').dataTable().fnDraw();
+
+        log_datatable.draw();
         return;
     }
     
@@ -48,33 +56,30 @@ function redraw_logs() {
         var log_row = $.extend(true, {}, bot_logs[index]);
         if (log_row['extended_message']) {
             var buttons_cell = '' +
-                '<button type="submit" class="btn btn-default btn-xs" data-toggle="modal" data-target="#extended-message-modal" onclick="show_extended_message(\'' + index + '\')"><span class="glyphicon glyphicon-plus"></span></button>';
+                '<button type="submit" class="pull-right btn btn-default btn-xs" data-toggle="modal" data-target="#extended-message-modal" onclick="show_extended_message(\'' + index + '\')"><span class="glyphicon glyphicon-plus"></span></button>';
             log_row['actions'] = buttons_cell;
         } else if (log_row['message'].length > MESSAGE_LENGTH) {
             log_row['message'] = log_row['message'].slice(0, MESSAGE_LENGTH) + '<strong>...</strong>';
             var buttons_cell = '' +
-                '<button type="submit" class="btn btn-default btn-xs" data-toggle="modal" data-target="#extended-message-modal" onclick="show_extended_message(\'' + index + '\')"><span class="glyphicon glyphicon-plus"></span></button>';
+                '<button type="submit" class="pull-right btn btn-default btn-xs" data-toggle="modal" data-target="#extended-message-modal" onclick="show_extended_message(\'' + index + '\')"><span class="glyphicon glyphicon-plus"></span></button>';
             log_row['actions'] = buttons_cell;            
         } else {
             log_row['actions'] = '';
         }
 
-        
         log_row['DT_RowClass'] = LEVEL_CLASS[log_row['log_level']];
-        
-        
-        $('#log-table').dataTable().fnAddData(log_row);
+
+        log_datatable.row.add(log_row);
     }
-    
-    $('#log-table').dataTable().fnAdjustColumnSizing();
-    $('#log-table').dataTable().fnDraw();
+
+    log_datatable.draw();
 }
 
 function redraw_stats() {
 
     var bot_id = document.getElementById('monitor-target').innerHTML;
 
-    $("#stats_table_body").empty();
+    stats_datatable.clear();
 
     $.each(bot_stats, function(index, bot){
 
@@ -82,22 +87,22 @@ function redraw_stats() {
         {
             var stat_line = "<tr>" +
                 "<td>" + bot.name + "</td>" +
-                "<td style='text-align: right;'>" + Math.round(bot.stats.avg_consumed_per_time * 1000) / 1000 + "</td>" +
-                "<td style='text-align: right;'>" + Math.round(bot.stats.avg_produced_per_time * 1000) / 1000 + "</td>" +
-                "<td style='text-align: right;'>" + Math.round(bot.stats.avg_produced_per_runs * 1000) / 1000 + "</td>" +
-                "<td style='text-align: right;'>" + Math.round(bot.stats.avg_errors_per_runs * 1000) / 1000 + "</td>" +
-                "<tr>";
+                "<td style='text-align: right;'>" + (Math.round(bot.stats.avg_consumed_per_time * 1000) / 1000) + "</td>" +
+                "<td style='text-align: right;'>" + (Math.round(bot.stats.avg_produced_per_time * 1000) / 1000) + "</td>" +
+                "<td style='text-align: right;'>" + (Math.round(bot.stats.avg_produced_per_runs * 1000) / 1000) + "</td>" +
+                "<td style='text-align: right;'>" + (Math.round(bot.stats.avg_errors_per_runs * 1000) / 1000) + "</td>" +
+                "</tr>";
 
-            $("#stats_table_body").append(stat_line);
+            stats_datatable.row.add($(stat_line));
         }
     });
-
+    stats_datatable.draw();
 }
-
 
 function redraw_queues() {
     var bot_id = document.getElementById('monitor-target').innerHTML;
 
+    var all_queues_element = document.getElementById('all-queues');
     var source_queue_element = document.getElementById('source-queue');
     var internal_queue_element = document.getElementById('internal-queue');
     var destination_queues_element = document.getElementById('destination-queues');
@@ -105,19 +110,25 @@ function redraw_queues() {
     var cell0;
     var cell1;
 
-    source_queue_element.innerHTML = '';
-    internal_queue_element.innerHTML = '';
-    destination_queues_element.innerHTML = '';
+    $(all_queues_element).empty();
+    $(source_queue_element).empty();
+    $(internal_queue_element).empty();
+    $(destination_queues_element).empty();
+
+    var source_queue;
+    var destination_queues;
+    var internal_queue;
 
     var bot_info = {};
+
     if (bot_id == ALL_BOTS) {
         bot_info['source_queues'] = {};
         bot_info['destination_queues'] = {};
 
         for (index in bot_queues) {
-            var source_queue = bot_queues[index]['source_queue'];
-            var destination_queues = bot_queues[index]['destination_queues'];
-            var internal_queue = bot_queues[index]['internal_queue'];
+            source_queue = bot_queues[index]['source_queue'];
+            destination_queues = bot_queues[index]['destination_queues'];
+            internal_queue = bot_queues[index]['internal_queue'];
 
             if (source_queue) {
                 bot_info['destination_queues'][source_queue[0]] = source_queue;
@@ -134,36 +145,6 @@ function redraw_queues() {
                 }
             }
         }
-    } else {
-        var bot_info = bot_queues[bot_id];
-    }
-
-    if (bot_info) {
-        if (bot_info['source_queue']) {
-            var source_queue = source_queue_element.insertRow();
-
-            r_level=Math.floor(((bot_info['source_queue'][1] < QUEUE_SCALE_MAX ? bot_info['source_queue'][1] : QUEUE_SCALE_MAX) / QUEUE_SCALE_MAX * 170));
-            g_level=Math.floor(170-r_level);
-
-            cell0 = source_queue.insertCell(0);
-            cell0.innerHTML = '<span style="color:rgb('+r_level+','+g_level+',0);">'+ bot_info['source_queue'][0]+'</span>';
-
-            cell1 = source_queue.insertCell(1);
-            cell1.innerHTML = '<span class="badge" style="background-color:rgb('+r_level+','+g_level+',0);">'+ bot_info['source_queue'][1]+'</span>';
-        }
-
-        if (bot_info['internal_queue'] !== undefined) {
-            var internal_queue = internal_queue_element.insertRow();
-
-            r_level=Math.floor(((bot_info['internal_queue'] < QUEUE_SCALE_MAX ? bot_info['internal_queue'] : QUEUE_SCALE_MAX) / QUEUE_SCALE_MAX * 170));
-            g_level=Math.floor(170-r_level);
-
-            cell0 = internal_queue.insertCell(0);
-            cell0.innerHTML = '<span style="color:rgb('+r_level+','+g_level+',0);">internal-queue</span>';
-
-            cell1 = internal_queue.insertCell(1);
-            cell1.innerHTML = '<span class="badge" style="background-color:rgb('+r_level+','+g_level+',0);">'+ bot_info['internal_queue']+'</span>';
-        }
 
         var dst_queues = [];
         for (index in bot_info['destination_queues']) {
@@ -172,22 +153,85 @@ function redraw_queues() {
 
         dst_queues.sort();
 
-
-
         for (index in dst_queues) {
-            var destination_queue = destination_queues_element.insertRow();
+            var all_queue_row = "<tr>";
 
             r_level=Math.floor(((dst_queues[index][1] < QUEUE_SCALE_MAX ? dst_queues[index][1] : QUEUE_SCALE_MAX) / QUEUE_SCALE_MAX * 170));
             g_level=Math.floor(170-r_level);
 
-            cell0 = destination_queue.insertCell(0);
-            cell0.innerHTML = '<span style="color:rgb('+r_level+','+g_level+',0);">'+ dst_queues[index][0] +'</span>';
 
-            cell1 = destination_queue.insertCell(1);
-            cell1.innerHTML = '<span class="badge" style="background-color:rgb('+r_level+','+g_level+',0);">'+ dst_queues[index][1] +'</span>';
+            all_queue_row += '<td><span style="color:rgb('+r_level+','+g_level+',0);">'+ dst_queues[index][0] +'</span></td>';
+            all_queue_row += '<td><span class="badge" style="background-color:rgb('+r_level+','+g_level+',0);">'+ dst_queues[index][1] +'</span></td>';
+
+            all_queues_datatable.row.add($(all_queue_row));
+        }
+
+    }
+    else
+    {
+        bot_info = bot_queues[bot_id];
+
+
+        if (bot_info)
+        {
+            if (bot_info['source_queue']) {
+                source_queue = source_queue_element.insertRow();
+
+                r_level=Math.floor(((bot_info['source_queue'][1] < QUEUE_SCALE_MAX ? bot_info['source_queue'][1] : QUEUE_SCALE_MAX) / QUEUE_SCALE_MAX * 170));
+                g_level=Math.floor(170-r_level);
+
+                cell0 = source_queue.insertCell(0);
+                cell0.innerHTML = '<span style="color:rgb('+r_level+','+g_level+',0);">'+ bot_info['source_queue'][0]+'</span>';
+
+                cell1 = source_queue.insertCell(1);
+                cell1.innerHTML = '<span class="badge" style="background-color:rgb('+r_level+','+g_level+',0);">'+ bot_info['source_queue'][1]+'</span>';
+            }
+
+            if (bot_info['internal_queue'] !== undefined) {
+                internal_queue = internal_queue_element.insertRow();
+
+                r_level=Math.floor(((bot_info['internal_queue'] < QUEUE_SCALE_MAX ? bot_info['internal_queue'] : QUEUE_SCALE_MAX) / QUEUE_SCALE_MAX * 170));
+                g_level=Math.floor(170-r_level);
+
+                cell0 = internal_queue.insertCell(0);
+                cell0.innerHTML = '<span style="color:rgb('+r_level+','+g_level+',0);">internal-queue</span>';
+
+                cell1 = internal_queue.insertCell(1);
+                cell1.innerHTML = '<span class="badge" style="background-color:rgb('+r_level+','+g_level+',0);">'+ bot_info['internal_queue']+'</span>';
+            }
+
+            if (bot_info['destination_queues'] !== undefined) {
+
+                var dst_queues = [];
+                for (index in bot_info['destination_queues']) {
+                    dst_queues.push(bot_info['destination_queues'][index]);
+                }
+
+                dst_queues.sort();
+
+
+                for (index in dst_queues) {
+                    var destination_queue = destination_queues_element.insertRow();
+
+                    r_level=Math.floor(((dst_queues[index][1] < QUEUE_SCALE_MAX ? dst_queues[index][1] : QUEUE_SCALE_MAX) / QUEUE_SCALE_MAX * 170));
+                    g_level=Math.floor(170-r_level);
+
+                    cell0 = destination_queue.insertCell(0);
+                    cell0.innerHTML = '<span style="color:rgb('+r_level+','+g_level+',0);">'+ dst_queues[index][0] +'</span>';
+
+                    cell1 = destination_queue.insertCell(1);
+                    cell1.innerHTML = '<span class="badge" style="background-color:rgb('+r_level+','+g_level+',0);">'+ dst_queues[index][1] +'</span>';
+                }
+
+            }
+
 
         }
+
     }
+
+    all_queues_datatable.draw();
+
 }
 
 function load_bot_log() {
@@ -270,24 +314,23 @@ function select_bot(bot_id) {
     }, RELOAD_QUEUES_EVERY * 1000);
 
     if(bot_id != ALL_BOTS) {
-        $("#logs-panel").css('display', 'block');
-        $("#source-queue-table-div").css('display', 'block');
-        $("#internal-queue-table-div").css('display', 'block');
-        $("#destination-queues-table-div").removeClass('col-md-12');
-        $("#destination-queues-table-div").addClass('col-md-4');
-        $("#destination-queue-header").html("Destination Queue");
+        $("#logs-panel").show();
+        $("#source-queue-table-div").show();
+        $("#internal-queue-table-div").show();
+        $("#destination-queues-table-div").show();
+        $("#all-queues-table-div").hide();
 
         load_bot_log();
         reload_logs = setInterval(function () {
             load_bot_log();
         }, RELOAD_LOGS_EVERY * 1000);
     } else {
-        $("#logs-panel").css('display', 'none');
-        $("#source-queue-table-div").css('display', 'none');
-        $("#internal-queue-table-div").css('display', 'none');
-        $("#destination-queues-table-div").removeClass('col-md-4');
-        $("#destination-queues-table-div").addClass('col-md-12');
-        $("#destination-queue-header").html("Queue");
+        $("#logs-panel").hide();
+        $("#source-queue-table-div").hide();
+        $("#internal-queue-table-div").hide();
+        $("#destination-queues-table-div").hide();
+        $("#all-queues-table-div").show();
+
     }
 }
 
@@ -349,23 +392,30 @@ $(document).ready(function() {
             // update agent list dropdown if (USE_AGENTS)
             if (USE_AGENTS)
             {
-                $('#stats_div').show();
-                $('#agent_selector_div').show();
-
                 get_agents(
                     function(data) {
                         update_agent_selector(data);
+
+                        $('#stats_div').show();
+                        $('#agent_selector_div').show();
+
+                        select_bot(ALL_BOTS);
+                        get_botnet_status(get_selected_agent(), update_bot_list, show_error);
                     },
                     function(error){
                         show_error(error);
                     }
                 );
             }
+            else
+            {
+                $('#stats_div').show();
+                //$('#agent_selector_div').show();
 
-            select_bot(ALL_BOTS);
+                select_bot(ALL_BOTS);
 
-            get_botnet_status(get_selected_agent(), update_bot_list, show_error);
-
+                get_botnet_status(get_selected_agent(), update_bot_list, show_error);
+            }
         },
         show_error
     );

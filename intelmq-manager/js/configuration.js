@@ -599,9 +599,6 @@ $(document).ready(function() {
         {
             // Everything should be done only after the main configs are successfully retrieved
 
-            // Dynamically load available bots
-            load_file(get_selected_agent(), 'bots', load_bots);
-
             // Dynamically adapt to fit screen
             window.onresize = resize;
 
@@ -613,11 +610,18 @@ $(document).ready(function() {
                 get_agents(
                     function(data) {
                         update_agent_selector(data);
+                        // Dynamically load available bots
+                        load_file(get_selected_agent(), 'bots', load_bots, show_error);
                     },
                     function(error){
                         show_error(error);
                     }
                 );
+            }
+            else
+            {
+                // Dynamically load available bots
+                load_file(get_selected_agent(), 'bots', load_bots, show_error);
             }
         },
         show_error
