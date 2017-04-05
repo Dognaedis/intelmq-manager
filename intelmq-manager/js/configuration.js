@@ -226,29 +226,38 @@ function fill_bot(id, group, name) {
         element.setAttribute('value', id);
         popup.appendChild(element);
     }
-    
+
+    var aux = [];
+
     for (key in bot) {
-        element = document.getElementById("node-" + key)
-        
+        aux.push({k: key, v: bot[key]})
+    }
+
+    aux.sort(function(a,b) {return (a.k > b.k) ? 1 : ((b.k > a.k) ? -1 : 0);} );
+
+    $(aux).each(function(n, item){
+        console.log(item);
+        element = document.getElementById("node-" + item.k)
+
         if (!element) {
             new_row = table.insertRow(-1);
             cell1 = new_row.insertCell(0);
             cell2 = new_row.insertCell(1);
-            
+
             cell1.setAttribute('class', 'node-key');
             cell2.setAttribute('class', 'node-value');
-            
-            cell1.innerHTML = key;
+
+            cell1.innerHTML = item.k;
             element = document.createElement("input");
             element.setAttribute('type', 'text');
-            
-            element.setAttribute('id', 'node-' + key);
+
+            element.setAttribute('id', 'node-' + item.k);
             cell2.appendChild(element);
         }
-        
-        element.setAttribute('value', bot[key]);    
-    }
-    
+
+        element.setAttribute('value', item.v);
+    });
+
     popup.setAttribute('class', "with-bot");
 }
 

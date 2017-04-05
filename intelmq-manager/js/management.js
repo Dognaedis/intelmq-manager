@@ -79,6 +79,13 @@ function update_bot_status(data)
     $('#badge_stopped').html(totals.stopped);
     $('#badge_crashed').html(totals.crashed);
 
+    botnet_status_element.setAttribute('class', '' + BOT_CLASS[botnet_status]);
+    botnet_status_element.innerHTML = botnet_status;
+
+    $('#botnet-status-panel-title').removeClass('waiting');
+    
+    //$('#log-table').dataTable().fnAdjustColumnSizing();
+    bot_datatable.draw();
 
     $('#bot-table .bot_list_start').click(function(e){
         $('#botnet-status-panel-title').addClass('waiting');
@@ -133,15 +140,6 @@ function update_bot_status(data)
         e.preventDefault();
         return false;
     });
-
-    botnet_status_element.setAttribute('class', '' + BOT_CLASS[botnet_status]);
-    botnet_status_element.innerHTML = botnet_status;
-
-
-    $('#botnet-status-panel-title').removeClass('waiting');
-    
-    //$('#log-table').dataTable().fnAdjustColumnSizing();
-    bot_datatable.draw();
     
 }
 
