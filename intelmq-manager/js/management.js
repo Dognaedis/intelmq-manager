@@ -20,7 +20,8 @@ var bot_datatable = $('#bot-table').DataTable({
             { "width": "100px", "targets": 1 },
             { "width": "100px", "targets": 2 },
         ],
-        order: [[ 0, "asc" ]]
+        order: [[ 0, "asc" ]],
+        responsive: true
     });
 
 window.onresize = function () {

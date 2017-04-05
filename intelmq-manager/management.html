@@ -29,6 +29,7 @@
     <!-- Jquery Confirm CSS -->
     <link href="plugins/jquery-confirm/jquery-confirm.min.css" rel="stylesheet">
 
+
     <link href="css/management.css" rel="stylesheet">
 
     <link rel="icon" type="image/png" href="images/logo2.png">
@@ -90,11 +91,6 @@
 
         <div class="navbar-default sidebar" role="navigation">
             <div class="sidebar-nav navbar-collapse">
-                <div id="agent_selector_div" style="display:none;">
-                    Selected Agent
-                    <select class="form-control input-sm" id="agent_selector">
-                    </select>
-                </div>
                 <ul class="nav" id="side-menu">
                     <div style="padding:20px;" id="botnet-status-panel">
 
@@ -163,6 +159,13 @@
 
         <!-- Page Content -->
         <div id="page-wrapper-with-sidebar">
+            <div class="row" id="agent_selector_div" style="display:none">
+                <div class="col-md-12" id="agent_selector_inside_div">
+                    <span>Selected Agent / Botnet:</span>
+                    <select class="btn btn-xs btn-default" id="agent_selector">
+                    </select>
+                </div>
+            </div>
             <div class="row">
                 <div id="graph-container">
                     <div class="col-md-12">
@@ -172,7 +175,7 @@
                             </div>
                             <div class="panel-body">
                                 <div class="table-responsive">
-                                    <table class="table" id="bot-table">
+                                    <table class="table" id="bot-table" width="100%">
                                         <thead>
                                             <tr><th>Bot ID</th><th>Status</th><th>Actions</th></tr>
                                         </thead>
@@ -201,6 +204,8 @@
     <!-- DataTables JavaScript -->
     <script src="plugins/dataTables/jquery.dataTables.js"></script>
     <script src="plugins/dataTables/dataTables.bootstrap.js"></script>
+
+
 
     <!-- Jquery Confirm -->
     <script src="plugins/jquery-confirm/jquery-confirm.min.js"></script>

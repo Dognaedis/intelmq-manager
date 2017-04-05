@@ -22,6 +22,9 @@ var log_datatable = $('#log-table').DataTable({
 });
 
 var all_queues_datatable = $('#all-queues-table-div table').DataTable({
+    columnDefs: [
+        {"className": "text-right", "targets":[1]}
+    ],
     order: [[ 1, "desc" ],[0, "asc"]]
 });
 
@@ -124,6 +127,7 @@ function redraw_queues() {
     if (bot_id == ALL_BOTS) {
         bot_info['source_queues'] = {};
         bot_info['destination_queues'] = {};
+        all_queues_datatable.clear();
 
         for (index in bot_queues) {
             source_queue = bot_queues[index]['source_queue'];

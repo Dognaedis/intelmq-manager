@@ -90,23 +90,27 @@
                 </li>
             </ul>
             <!-- /.navbar-top-links -->
+
         </nav>
 
         <div class="navbar-default sidebar" role="navigation">
             <div class="sidebar-nav navbar-collapse">
-                <div id="agent_selector_div" style="display:none;">
-                    Selected Agent
-                    <select class="form-control input-sm" id="agent_selector">
-                    </select>
-                </div>
-                <ul class="nav" id="side-menu">
+                <ul class="nav" id="side-menu" >
                 </ul>
             </div>
         </div>
 
 
+
         <!-- Page Content -->
         <div id="page-wrapper-with-sidebar">
+            <div class="row" id="agent_selector_div" style="display:none">
+                <div class="col-md-12" id="agent_selector_inside_div">
+                    <span>Selected Agent / Botnet:</span>
+                    <select class="btn btn-xs btn-default" id="agent_selector">
+                    </select>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-12">
                     <h3>Status:
