@@ -95,11 +95,6 @@
 
         <div class="navbar-default sidebar" role="navigation">
             <div class="sidebar-nav navbar-collapse">
-                <div id="agent_selector_div" style="display:none;">
-                    Selected Agent
-                    <select class="form-control input-sm" id="agent_selector">
-                    </select>
-                </div>
                 <ul class="nav" id="side-menu">
                 </ul>
             </div>
@@ -107,14 +102,22 @@
 
         <!-- Page Content -->
         <div id="page-wrapper-with-sidebar">
+            <div class="row" id="agent_selector_div" style="display:none">
+                <div class="col-md-12" id="agent_selector_inside_div">
+                    <span>Selected Agent / Botnet:</span>
+                    <select class="btn btn-xs btn-default" id="agent_selector">
+                    </select>
+                </div>
+            </div>
+            <br>
             <div class="row">
                 <div class="col-md-12">
-                    <div class="panel panel-default" id="queues-panel">
+                    <div class="panel panel-default" id="agents-panel">
                         <div class="panel-heading">
                             <h4 id="agents-panel-title">Agents</h4>
                         </div>
                         <div class="panel-body">
-                            <div id="" class="col-md-12">
+                            <div id="agents-panel-body-div" class="col-md-12">
                                 <table class="table">
                                     <thead>
                                         <tr>

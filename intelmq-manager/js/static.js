@@ -67,3 +67,4 @@ var page_is_exiting = false;
 
 var NEXT_RELOAD_SECONDS = RELOAD_CHARTS_EVERY;
 
+var PAGE=null;

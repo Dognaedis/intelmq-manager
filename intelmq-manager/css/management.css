@@ -6,7 +6,10 @@
 }
 
 #botnet-status {
-    padding: 8px;
+    padding: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius:5px;
 }
 
 #graph-container {
@@ -17,3 +20,39 @@
 #bot-table-panel {
     overflow: auto;
 }
+
+#bot-table{
+    table-layout: fixed;
+    word-wrap:break-word;
+}
+
+.bot_running {
+    background-color: #AAEEAA;
+    color: #333333;
+}
+
+.bot_stopped {
+    background-color: #EEAAAA;
+    color: #333333;
+}
+
+.bot_starting {
+    background-color: #AAEEEE;
+    color: #333333;
+}
+
+.bot_stopping {
+    background-color: #EEDD88;
+    color: #333333;
+}
+
+.bot_crashed {
+    background-color: #AAAAAA;
+    color: #333333;
+}
+
+.bot_unknown {
+    background-color: #EEEEEE;
+    color: #888888;
+}
+

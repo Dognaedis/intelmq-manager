@@ -614,14 +614,27 @@ div.graph-manipulationUI.notification{
 
 #agent_selector_div
 {
-    padding:20px;
+   /* padding:20px;
     padding-top:5px;
     padding-bottom:10px;
 
     text-align:center;
     border-bottom:1px solid #DDDDDD;
-    background-color:#F5F5F5;
+    background-color:#F5F5F5;*/
 }
+
+#agent_selector_inside_div
+{
+    border-bottom:1px solid #DDDDDD;
+    background-color:#E8E8E8;
+    padding-top:3px;
+    padding-bottom:3px;
+    vertical-align: bottom;
+    font-size:14px;
+    color: #666666;
+}
+
+
 
 /* ---------------------- */
 /* USAGE
@@ -772,5 +785,3 @@ div.graph-manipulationUI.notification{
         vertical-align: bottom;
     }
 }
-Restrictions
-With column of

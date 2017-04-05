@@ -29,6 +29,7 @@
     <!-- Jquery Confirm CSS -->
     <link href="plugins/jquery-confirm/jquery-confirm.min.css" rel="stylesheet">
 
+
     <link href="css/management.css" rel="stylesheet">
 
     <link rel="icon" type="image/png" href="images/logo2.png">
@@ -90,24 +91,67 @@
 
         <div class="navbar-default sidebar" role="navigation">
             <div class="sidebar-nav navbar-collapse">
-                <div id="agent_selector_div" style="display:none;">
-                    Selected Agent
-                    <select class="form-control input-sm" id="agent_selector">
-                    </select>
-                </div>
                 <ul class="nav" id="side-menu">
                     <div style="padding:20px;" id="botnet-status-panel">
-                        <h4 id="botnet-status-panel-title">Botnet Status:</h4>
+
+                        <br>
+                        <h4 id="botnet-status-panel-title">Botnet Status:&nbsp;</h4>
                         <div class="panel-div">
-                            Status:
-                            <span id="botnet-status" class="bg-warning">
+                            <span id="botnet-status" style="font-size:12px;" class="bot_unknown">
                                     Unknown
                             </span>
                             <span class="pull-right">
-                                    <button type="submit" id="start_botnet" class="btn btn-xs btn-default"><span class="fa fa-fw fa-play"></span></button>
-                                    <button type="submit" id="stop_botnet" class="btn btn-xs btn-default"><span class="fa fa-fw fa-square"></span></button>
+
+                                    <button type="submit" id="start_botnet" title="Start Botnet" class="btn btn-xs btn-default">Start <span class="fa fa-fw fa-play"></span></button>
+                                    <button type="submit" id="stop_botnet" title="Stop Botnet" class="btn btn-xs btn-default">Stop <span class="fa fa-fw fa-square"></span></button>
                             </span>
+                            <br>
                         </div>
+                        <div class="panel-div">
+                            <ul style="list-style: none; padding:0px;">
+                                <li>
+                                    Starting
+                                    <span id="badge_starting" class="badge bot_starting pull-right">
+                                        ...
+                                    </span>
+                                </li>
+                                <li>
+                                    Running
+                                    <span id="badge_running" class="badge bot_running pull-right">
+                                        ...
+                                    </span>
+                                </li>
+                                <li>
+                                    Stopping
+                                    <span id="badge_stopping" class="badge bot_stopping pull-right">
+                                        ...
+                                    </span>
+                                </li>
+                                <li>
+                                    Stopped
+                                    <span id="badge_stopped" class="badge bot_stopped pull-right">
+                                        ...
+                                    </span>
+                                </li>
+                                <li>
+                                    Crashed
+                                    <span id="badge_crashed" class="badge bot_crashed pull-right">
+                                        ...
+                                    </span>
+                                </li>
+
+                            </ul>
+                        </div>
+                        <span id="all_botnet_buttons_section" style="display:none;">
+                            <h4 id="all_botnet-status-panel-title">All Botnets:&nbsp;
+                            </h4>
+                            <div class="panel-div">
+                                <span class="pull-right">
+                                        <button type="submit" id="start_all_botnets" title="Start all Botnets" class="btn btn-xs btn-default">Start <span class="fa fa-fw fa-play"></span></button>
+                                        <button type="submit" id="stop_all_botnets" title="Stop all Botnets" class="btn btn-xs btn-default">Stop <span class="fa fa-fw fa-square"></span></button>
+                                </span>
+                            </div>
+                        </span>
                     </div>
                 </ul>
             </div>
@@ -115,16 +159,23 @@
 
         <!-- Page Content -->
         <div id="page-wrapper-with-sidebar">
+            <div class="row" id="agent_selector_div" style="display:none">
+                <div class="col-md-12" id="agent_selector_inside_div">
+                    <span>Selected Agent / Botnet:</span>
+                    <select class="btn btn-xs btn-default" id="agent_selector">
+                    </select>
+                </div>
+            </div>
             <div class="row">
                 <div id="graph-container">
                     <div class="col-md-12">
                         <div class="panel panel-default" id="bot-table-panel">
                             <div class="panel-heading">
-                                <h4 id="bot-status-panel-title">Individual Bot Status:</h4>
+                                <h4 id="bot-status-panel-title">Individual Bot Status:&nbsp;<button type="submit" id="refresh" title="Refresh Status" class="pull-right btn btn-xs btn-default">Refresh Status <span class="fa fa-fw fa-refresh"></span></button></h4>
                             </div>
                             <div class="panel-body">
                                 <div class="table-responsive">
-                                    <table class="table" id="bot-table">
+                                    <table class="table" id="bot-table" width="100%">
                                         <thead>
                                             <tr><th>Bot ID</th><th>Status</th><th>Actions</th></tr>
                                         </thead>
@@ -153,6 +204,8 @@
     <!-- DataTables JavaScript -->
     <script src="plugins/dataTables/jquery.dataTables.js"></script>
     <script src="plugins/dataTables/dataTables.bootstrap.js"></script>
+
+
 
     <!-- Jquery Confirm -->
     <script src="plugins/jquery-confirm/jquery-confirm.min.js"></script>
