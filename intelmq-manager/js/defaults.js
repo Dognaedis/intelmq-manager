@@ -1,9 +1,3 @@
-function generate_defaults_conf(defaults) {
-    var conf_string = '';
-    
-    return conf_string;
-}
-
 function read_defaults_conf(config) {
     return config
 }

@@ -1,9 +1,9 @@
 function generate_pipeline_conf(edges) {
-    var conf_string = '';
     var new_edges = {};
+    var edge;
     
     for (index in edges) {
-        var edge = edges[index];
+        edge = edges[index];
         
         if (!new_edges[edge.from]) {
             new_edges[edge.from] = {
@@ -24,7 +24,7 @@ function generate_pipeline_conf(edges) {
     }
     
     for (id in new_edges) {
-        var edge = new_edges[id];
+        edge = new_edges[id];
         
         if (edge['source-queue'].length > 0) {
             edge['source-queue'] = id + '-queue';
@@ -54,13 +54,12 @@ function read_pipeline_conf(config, nodes) {
                 var to_node = config[from]['destination-queues'][index].replace(/-queue$/, "");
                 if(nodes[from] != undefined && nodes[to_node] != undefined) {
                     var edge_id = 'edge' + i++;
-                    var new_edge = {
+
+                    edges[edge_id]= {
                         'id': edge_id,
                         'from': from,
                         'to': to_node
                     };
-                    
-                    edges[edge_id]=new_edge;
                 }
             }
         }

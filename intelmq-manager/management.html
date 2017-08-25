@@ -25,6 +25,11 @@
 
     <!-- Custom CSS -->
     <link href="css/sb-admin-2.css" rel="stylesheet">
+
+    <!-- Jquery Confirm CSS -->
+    <link href="plugins/jquery-confirm/jquery-confirm.min.css" rel="stylesheet">
+
+
     <link href="css/management.css" rel="stylesheet">
 
     <link rel="icon" type="image/png" href="images/logo2.png">
@@ -51,6 +56,11 @@
 
             <ul class="nav navbar-top-links navbar-left">
                 <li>
+                    <a href="agents.html">
+                        <span class="top-menu-text"><img src="./images/agents.png" width="24px" height="24px">&nbsp;Agents</span>
+                    </a>
+                </li>
+                <li>
                     <a href="configs.html#load">
                         <span class="top-menu-text"><img src="./images/config.png" width="24px" height="24px">&nbsp;Configuration</span>
                     </a>
@@ -58,6 +68,11 @@
                 <li>
                     <a href="management.html">
                         <span class="top-menu-text"><img src="./images/botnet.png" width="24px" height="24px">&nbsp;Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="status.html">
+                        <span class="top-menu-text"><img src="./images/status.png" width="24px" height="24px">&nbsp;Status</span>
                     </a>
                 </li>
                 <li>
@@ -74,28 +89,93 @@
             <!-- /.navbar-top-links -->
         </nav>
 
+        <div class="navbar-default sidebar" role="navigation">
+            <div class="sidebar-nav navbar-collapse">
+                <ul class="nav" id="side-menu">
+                    <div style="padding:20px;" id="botnet-status-panel">
+
+                        <br>
+                        <h4 id="botnet-status-panel-title">Botnet Status:&nbsp;</h4>
+                        <div class="panel-div">
+                            <span id="botnet-status" style="font-size:12px;" class="bot_unknown">
+                                    Unknown
+                            </span>
+                            <span class="pull-right">
+
+                                    <button type="submit" id="start_botnet" title="Start Botnet" class="btn btn-xs btn-default">Start <span class="fa fa-fw fa-play"></span></button>
+                                    <button type="submit" id="stop_botnet" title="Stop Botnet" class="btn btn-xs btn-default">Stop <span class="fa fa-fw fa-square"></span></button>
+                            </span>
+                            <br>
+                        </div>
+                        <div class="panel-div">
+                            <ul style="list-style: none; padding:0px;">
+                                <li>
+                                    Starting
+                                    <span id="badge_starting" class="badge bot_starting pull-right">
+                                        ...
+                                    </span>
+                                </li>
+                                <li>
+                                    Running
+                                    <span id="badge_running" class="badge bot_running pull-right">
+                                        ...
+                                    </span>
+                                </li>
+                                <li>
+                                    Stopping
+                                    <span id="badge_stopping" class="badge bot_stopping pull-right">
+                                        ...
+                                    </span>
+                                </li>
+                                <li>
+                                    Stopped
+                                    <span id="badge_stopped" class="badge bot_stopped pull-right">
+                                        ...
+                                    </span>
+                                </li>
+                                <li>
+                                    Crashed
+                                    <span id="badge_crashed" class="badge bot_crashed pull-right">
+                                        ...
+                                    </span>
+                                </li>
+
+                            </ul>
+                        </div>
+                        <span id="all_botnet_buttons_section" style="display:none;">
+                            <h4 id="all_botnet-status-panel-title">All Botnets:&nbsp;
+                            </h4>
+                            <div class="panel-div">
+                                <span class="pull-right">
+                                        <button type="submit" id="start_all_botnets" title="Start all Botnets" class="btn btn-xs btn-default">Start <span class="fa fa-fw fa-play"></span></button>
+                                        <button type="submit" id="stop_all_botnets" title="Stop all Botnets" class="btn btn-xs btn-default">Stop <span class="fa fa-fw fa-square"></span></button>
+                                </span>
+                            </div>
+                        </span>
+                    </div>
+                </ul>
+            </div>
+        </div>
+
         <!-- Page Content -->
-        <div id="page-wrapper">
+        <div id="page-wrapper-with-sidebar">
+            <div class="row" id="agent_selector_div" style="display:none">
+                <div class="col-md-12" id="agent_selector_inside_div">
+                    <span>Selected Agent / Botnet:</span>
+                    <select class="btn btn-xs btn-default" id="agent_selector">
+                    </select>
+                </div>
+            </div>
             <div class="row">
                 <div id="graph-container">
-                    <div class="col-md-2">
-                        <div class="panel panel-default" id="botnet-status-panel">
-                            <div class="panel-heading">
-                                <h4 id="botnet-status-panel-title">Botnet Status:<h4>
-                            </div>
-                            <div class="panel-body">
-                                <div class="panel-div">Status: <span id="botnet-status" class="bg-warning">Unknown</span></div><div id="botnet-buttons"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-10">
+                    <div class="col-md-12">
                         <div class="panel panel-default" id="bot-table-panel">
                             <div class="panel-heading">
-                                <h4 id="bot-status-panel-title">Individual Bot Status:<h4>
+                                <h4 id="bot-status-panel-title">Individual Bot Status:&nbsp;<button type="submit" id="refresh" title="Refresh Status" class="pull-right btn btn-xs btn-default">Refresh Status <span class="fa fa-fw fa-refresh"></span></button></h4>
                             </div>
                             <div class="panel-body">
                                 <div class="table-responsive">
-                                    <table class="table" id="bot-table">
+                                    <table class="table" id="bot-table" width="100%">
                                         <thead>
                                             <tr><th>Bot ID</th><th>Status</th><th>Actions</th></tr>
                                         </thead>
@@ -109,9 +189,11 @@
                 </div>
             </div>
         </div>
+    </div>
 
-    <!-- jQuery Version 1.11.0 -->
-    <script src="plugins/jquery-1.11.0.js"></script>
+
+    <!-- jQuery Version 3.1.1 -->
+    <script src="plugins/jquery-3.1.1.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
     <script src="plugins/bootstrap/bootstrap.min.js"></script>
@@ -123,11 +205,18 @@
     <script src="plugins/dataTables/jquery.dataTables.js"></script>
     <script src="plugins/dataTables/dataTables.bootstrap.js"></script>
 
+
+
+    <!-- Jquery Confirm -->
+    <script src="plugins/jquery-confirm/jquery-confirm.min.js"></script>
+
     <!-- Custom Theme JavaScript -->
     <script src="js/sb-admin-2.js"></script>
 
-    <!-- Custom Application JavaScript -->
+
+        <!-- Custom Application JavaScript -->
     <script src="js/static.js"></script>
+    <script src="js/common.js"></script>
     <script src="js/management.js"></script>
 
 </body>
