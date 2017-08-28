@@ -7,28 +7,28 @@ var ACCEPTED_NEIGHBORS = {
     'Parser': ['Expert', 'Output'],
     'Expert': ['Expert', 'Output'],
     'Output': []
-}
+};
 
 var GROUP_LEVELS = {
     'Collector': 0,
     'Parser': 1,
     'Expert': 2,
     'Output': 3
-}
+};
 
 var GROUP_COLORS = {
     'Collector': '#FF0000',
     'Parser': '#00FF00',
     'Expert': '#0000FF',
     'Output': '#FFFF00'
-}
+};
 
 var NODE_GROUP_COLORS = {
     'Collector': '#FF0000',
     'Parser': '#00FF00',
     'Expert': {background:'#5555FF', border:'#1111CC', highlight:{background:'#1111DD', border:'#1111CC'},hover:{background:'#1111DD',border:'#1111CC'}},
     'Output': ''
-}
+};
 
 var LEVEL_CLASS = {
     'DEBUG': 'success',
@@ -36,6 +36,7 @@ var LEVEL_CLASS = {
     'WARNING': 'warning',
     'ERROR': 'danger',
     'CRITICAL': 'danger'
+};
 
 
 var QUEUE_SCALE_MAX = 200.0;

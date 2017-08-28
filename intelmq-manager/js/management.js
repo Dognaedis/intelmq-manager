@@ -21,12 +21,72 @@ var bot_datatable = $('#bot-table').DataTable({
             { "width": "100px", "targets": 2 },
         ],
         order: [[ 0, "asc" ]],
+        fnDrawCallback: function ( oSettings ) {
+                set_bot_action_handlers();
+        },
         responsive: true
     });
 
 window.onresize = function () {
     bot_datatable.draw();
 };
+
+function set_bot_action_handlers()
+{
+    $('#bot-table .bot_list_start').click(function(e){
+        $('#botnet-status-panel-title').addClass('waiting');
+        bot_id=$(this).data('bot-id');
+        start_bot(
+            get_selected_agent(),
+            bot_id,
+            function(status){
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            },
+            function(error){
+                show_error(error);
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            }
+        );
+        e.preventDefault();
+        return false;
+    });
+
+    $('#bot-table .bot_list_stop').click(function(e){
+        $('#botnet-status-panel-title').addClass('waiting');
+        bot_id=$(this).data('bot-id');
+        stop_bot(
+            get_selected_agent(),
+            bot_id,
+            function(status){
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            },
+            function(error){
+                show_error(error);
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            }
+        );
+        e.preventDefault();
+        return false;
+    });
+
+    $('#bot-table .bot_list_forcestop').click(function(e){
+        $('#botnet-status-panel-title').addClass('waiting');
+        bot_id=$(this).data('bot-id');
+        forcestop_bot(
+            get_selected_agent(),
+            bot_id,
+            function(status){
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            },
+            function(error){
+                show_error(error);
+                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
+            }
+        );
+        e.preventDefault();
+        return false;
+    });
+}
 
 function update_bot_status(data)
 {
@@ -85,62 +145,10 @@ function update_bot_status(data)
     $('#botnet-status-panel-title').removeClass('waiting');
     
     //$('#log-table').dataTable().fnAdjustColumnSizing();
-    bot_datatable.draw();
+    bot_datatable.draw('full-hold');
 
-    $('#bot-table .bot_list_start').click(function(e){
-        $('#botnet-status-panel-title').addClass('waiting');
-        bot_id=$(this).data('bot-id');
-        start_bot(
-            get_selected_agent(),
-            bot_id,
-            function(status){
-                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
-            },
-            function(error){
-                show_error(error);
-                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
-            }
-        );
-        e.preventDefault();
-        return false;
-    });
+    set_bot_action_handlers();
 
-    $('#bot-table .bot_list_stop').click(function(e){
-        $('#botnet-status-panel-title').addClass('waiting');
-        bot_id=$(this).data('bot-id');
-        stop_bot(
-            get_selected_agent(),
-            bot_id,
-            function(status){
-                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
-            },
-            function(error){
-                show_error(error);
-                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
-            }
-        );
-        e.preventDefault();
-        return false;
-    });
-
-    $('#bot-table .bot_list_forcestop').click(function(e){
-        $('#botnet-status-panel-title').addClass('waiting');
-        bot_id=$(this).data('bot-id');
-        forcestop_bot(
-            get_selected_agent(),
-            bot_id,
-            function(status){
-                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
-            },
-            function(error){
-                show_error(error);
-                get_botnet_status(get_selected_agent(), update_bot_status, show_error);
-            }
-        );
-        e.preventDefault();
-        return false;
-    });
-    
 }
 
 function start_all_botnets()
